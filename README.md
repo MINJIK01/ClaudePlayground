@@ -16,6 +16,7 @@ Collects new arXiv papers matching the categories and keywords in `config.json` 
 | `relevance.recall` | 키워드가 없어도 이 값 이상이고 `recall_terms` 중 하나가 있으면 semantic match로 수집 | Papers at or above this that contain one of `recall_terms` are kept as semantic matches even without a keyword |
 | `relevance.recall_terms` | semantic match에 필요한 핵심어 (부분 일치) | Core terms a semantic match must contain (substring match) |
 | `graph_top_k` | 그래프에서 논문별로 저장할 유사 논문 수 | Number of similar papers stored per paper for the graph |
+| `graph_window_days` | 그래프 기본 표시 기간(일). 이전 논문은 All time에서 표시 | Default graph window in days; older papers appear under All time |
 | `benchmarks` | 벤치마크 이름 → abstract에서 찾을 표기 목록 | Benchmark name → spellings to look for in the title/abstract |
 | `anchors` | 키워드·기간과 무관하게 1회 추가할 기준 논문 arXiv ID | arXiv IDs of reference papers added once, regardless of keywords or dates |
 | `embedding_model` | 유사도 계산용 임베딩 모델 (fastembed) | Embedding model used for similarity (fastembed) |
@@ -29,12 +30,13 @@ Relevance is the highest cosine similarity between a paper's embedding and any a
 - 로컬 / Local: `pip install -r requirements.txt && python tracker.py [days] && python graph.py`
 
 ## 논문 그래프 / Paper graph
-`graph.py`가 GitHub Actions에서 제목+abstract 임베딩(`BAAI/bge-small-en-v1.5`, CPU)을 계산하고, 코사인 유사도 상위 k개 이웃, k-means 주제 클러스터, 벤치마크 태그를 `docs/graph.json`에 저장합니다. 임베딩은 `data/embeddings.npz`에 캐시되어 새 논문만 계산합니다.
-On GitHub Actions, `graph.py` embeds each title+abstract (`BAAI/bge-small-en-v1.5`, CPU) and writes top-k cosine neighbors, k-means topic clusters, and benchmark tags to `docs/graph.json`. Embeddings are cached in `data/embeddings.npz`, so only new papers are embedded.
+`graph.py`가 GitHub Actions에서 제목+abstract 임베딩(`BAAI/bge-small-en-v1.5`, CPU)을 계산하고, 코사인 유사도 상위 k개 이웃, k-means 주제 클러스터, 벤치마크 태그를 `docs/graph.json`에 저장합니다. 임베딩은 `data/embeddings/<YYMM>.npz`(arXiv ID 월별, float16)에 캐시되어 새 논문만 계산하고, 매일 바뀌는 파일은 이번 달 것 하나뿐입니다.
+On GitHub Actions, `graph.py` embeds each title+abstract (`BAAI/bge-small-en-v1.5`, CPU) and writes top-k cosine neighbors, k-means topic clusters, and benchmark tags to `docs/graph.json`. Embeddings are cached per arXiv month in `data/embeddings/<YYMM>.npz` (float16), so only new papers are embedded and only the current month's file changes each day.
 
 - 키워드 / 주제 클러스터 색상 전환. 클러스터 라벨은 클러스터 내 특징적인 TF-IDF 단어 / Color by keyword or topic cluster; cluster labels are their most distinctive TF-IDF terms
 - 벤치마크 칩으로 해당 벤치마크를 언급한 논문 강조 / Benchmark chips highlight papers that mention them
 - 마름모 노드는 anchor(기준) 논문 / Diamond nodes are anchor papers
+- 기본은 최근 `graph_window_days`일 + anchor만 표시, All time으로 전체 보기. 유사 논문 목록은 항상 전체 기준 / Shows the last `graph_window_days` days plus anchors by default; All time shows everything. Similar-paper lists always search all papers
 - 논문당 연결 수 1–5, 키워드 그룹 표시·숨김 / 1–5 links per paper; toggle keyword groups
 - 최근 7일 추가 논문은 빨간 테두리 표시, 개요 패널에 New this week 목록 / Papers added in the last 7 days are outlined in red and listed under New this week
 - 클러스터 번호는 이전 실행 결과에서 이어서 계산해 매일 크게 바뀌지 않음 / Cluster numbering continues from the previous run, so it stays stable day to day
