@@ -85,14 +85,16 @@ def main():
     rel = lambda ps: (vectors(ps, cfg["embedding_model"], cache) @ A.T).max(1) if ps and len(A) else [1.0] * len(ps)
     for p, r in zip(cands, rel(cands)):
         p.update(relevance=round(float(r), 3), matched=matched(p, cfg), added=today)
-    keep = lambda p: (p["matched"] and p["relevance"] >= rel_cfg["min"]) or p["relevance"] >= rel_cfg["recall"]
+    # 키워드 일치 + 최소 관련성, 또는 핵심어(recall_terms)가 있으면서 관련성이 높은 논문(semantic match)
+    term = lambda p: any(t in (p["title"] + " " + p["abstract"]).lower() for t in rel_cfg["recall_terms"])
+    keep = lambda p: bool(p["matched"] and p["relevance"] >= rel_cfg["min"]) or (p["relevance"] >= rel_cfg["recall"] and term(p))
     new = [p for p in cands if keep(p)]
 
-    # 기존 논문도 같은 기준으로 재평가해 min 미만(노이즈)은 제거
+    # 기존 논문도 같은 기준으로 재평가해 기준 미달(노이즈)은 제거
     old = [p for p in db if not p.get("anchor")]
     for p, r in zip(old, rel(old)):
-        p["relevance"] = round(float(r), 3)
-    dropped = [p for p in old if p["relevance"] < rel_cfg["min"]]
+        p.update(relevance=round(float(r), 3), matched=matched(p, cfg))
+    dropped = [p for p in old if not keep(p)]
     db = [p for p in db if p not in dropped] + new
 
     print(f"candidates={len(cands)} keyword={sum(bool(p['matched']) for p in cands)} "
