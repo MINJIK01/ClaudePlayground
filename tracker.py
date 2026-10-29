@@ -27,12 +27,15 @@ def parse(xml):
         }
 
 
-def to_md(p, cfg):
+def matched(p, cfg):
     hay = (p["title"] + " " + p["abstract"]).lower()
-    matched = [" + ".join(k) for k in cfg["keywords"] if all(w in hay for w in k)]
+    return [" + ".join(k) for k in cfg["keywords"] if all(w in hay for w in k)]
+
+
+def to_md(p, cfg):
     authors = ", ".join(p["authors"][:5]) + (" et al." if len(p["authors"]) > 5 else "")
     return (f"### [{p['title']}]({p['url']})\n"
-            f"- {authors}\n- {p['published']} · {', '.join(p['cats'])} · 매칭: {', '.join(matched) or '-'}\n\n"
+            f"- {authors}\n- {p['published']} · {', '.join(p['cats'])} · 매칭: {', '.join(matched(p, cfg))}\n\n"
             f"<details><summary>Abstract</summary>\n\n{p['abstract']}\n</details>\n")
 
 
@@ -48,7 +51,7 @@ def main():
         papers = list(parse(r.read()))
 
     cutoff = (dt.date.today() - dt.timedelta(days=days)).isoformat()
-    new = [p for p in papers if p["published"] >= cutoff and p["id"] not in seen]
+    new = [p for p in papers if p["published"] >= cutoff and p["id"] not in seen and matched(p, cfg)]
     print(f"fetched={len(papers)} new={len(new)}")
     if not new:
         return
