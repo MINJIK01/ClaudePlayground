@@ -105,6 +105,8 @@
 <body>
 <header>
   <div class="brand"><h1>Memory Paper Graph</h1><span id="stats" class="mono"></span></div>
+  <div class="ctrl">Show <div class="seg" id="win" role="group" aria-label="Time window">
+    <button type="button" data-all="0" id="winLabel">Recent</button><button type="button" data-all="1">All time</button></div></div>
   <div class="ctrl">Color by <div class="seg" id="mode" role="group" aria-label="Color by">
     <button type="button" data-mode="kw">Keyword</button><button type="button" data-mode="cl">Topic cluster</button></div></div>
   <div class="ctrl">Links per paper <div class="seg" id="k" role="group" aria-label="Links per paper"></div></div>
@@ -137,14 +139,18 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
   const groups = () => state.mode === "kw" ? kws : G.clusters.map((_, c) => c);
   const color = g => g === "anchor" ? css("--anchor") : css(`--k${groups().indexOf(g) % 8 + 1}`);
   const kwColor = k => css(`--k${kws.indexOf(k) % 8 + 1}`);
-  const state = {k: 2, q: "", mode: "kw", off: new Set(), bench: null, sel: null, fresh: false};
+  const state = {k: 2, q: "", mode: "kw", off: new Set(), bench: null, sel: null, fresh: false, all: false};
+  // 기본은 최근 window_days 논문 + anchor만 표시 (데이터는 전부 유지, 유사 논문 목록은 전체 기준)
+  const winStart = new Date(Date.now() - G.window_days * 864e5).toISOString().slice(0, 10);
+  const inView = p => p.anchor || state.all || p.published >= winStart;
+  $("winLabel").textContent = `Last ${G.window_days} days`;
   const latest = tracked.reduce((m, p) => p.published > m ? p.published : m, "");
 
   $("k").innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" data-k="${n}">${n}</button>`).join("");
   $("bench").innerHTML = `<b>Filter</b><button type="button" class="chip" id="fresh">New this week<span>${fresh.length}</span></button>` + benches.map(([b, n]) => `<button type="button" class="chip" data-bench="${esc(b)}">${esc(b)}<span>${n}</span></button>`).join("");
 
   function legend() {
-    const count = g => papers.filter(p => group(p) === g).length;
+    const count = g => papers.filter(p => inView(p) && group(p) === g).length;
     const chip = (g, name, cls = "") => `<button type="button" class="chip" data-g="${esc(g)}"><i class="${cls}" style="background:${color(g)}"></i>${esc(name)}<span>${count(g)}</span></button>`;
     $("legend").innerHTML = `<b>${state.mode === "kw" ? "Keywords" : "Topics"}</b>` +
       groups().map(g => chip(g, state.mode === "kw" ? g : clusterName(g))).join("") +
@@ -161,8 +167,9 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
 
   function render() {
     const uniq = {}, deg = {}, near = new Set(state.sel ? [state.sel] : []);
+    const shown = papers.filter(inView), ids = new Set(shown.map(p => p.id));
     for (const [a, nb] of Object.entries(G.neighbors))
-      for (const [b, s] of nb.slice(0, state.k)) uniq[[a, b].sort()] = [a, b, s];
+      for (const [b, s] of nb.slice(0, state.k)) if (ids.has(a) && ids.has(b)) uniq[[a, b].sort()] = [a, b, s];
     const active = Object.values(uniq);
     active.forEach(([a, b]) => {
       deg[a] = (deg[a] || 0) + 1; deg[b] = (deg[b] || 0) + 1;
@@ -172,7 +179,8 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
     const lit = p => !state.off.has(String(group(p))) && (!state.q || p.title.toLowerCase().includes(state.q))
       && (!state.bench || (G.benchmarks[p.id] || []).includes(state.bench)) && (!state.fresh || isNew(p)) && (!state.sel || near.has(p.id));
     const fg = css("--fg"), muted = css("--muted"), accent = css("--accent"), edge = css("--edge");
-    nodes.update(papers.map(p => ({
+    nodes.remove(nodes.getIds().filter(id => !ids.has(id)));
+    nodes.update(shown.map(p => ({
       id: p.id, value: 1 + (deg[p.id] || 0), title: p.title, shape: p.anchor ? "diamond" : "dot",
       borderWidth: isNew(p) ? 1.5 : 0,
       label: p.title.length > 30 ? p.title.slice(0, 30) + "…" : p.title,
@@ -185,7 +193,9 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
       color: {color: state.sel && (a === state.sel || b === state.sel) ? accent : edge, highlight: accent,
               opacity: lit(byId[a]) && lit(byId[b]) ? 1 : 0.15},
     })));
-    $("stats").textContent = `${tracked.length} papers · ${papers.length - tracked.length} anchors · ${active.length} links · latest ${latest}`;
+    const n = shown.filter(p => !p.anchor).length;
+    $("stats").textContent = `${n}${n < tracked.length ? ` of ${tracked.length}` : ""} papers · ${papers.length - tracked.length} anchors · ${active.length} links · latest ${latest}`;
+    document.querySelectorAll("#win button").forEach(b => b.setAttribute("aria-pressed", (b.dataset.all === "1") === state.all));
     document.querySelectorAll("#k button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.k === state.k));
     document.querySelectorAll("#mode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === state.mode));
     document.querySelectorAll("#legend .chip").forEach(c => {
@@ -233,6 +243,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
         <li>Select a paper to read its abstract and see its closest papers.</li>
         <li>Switch <b>Color by</b> to see topic clusters, labeled by their most distinctive terms.</li>
         <li>Select a benchmark to highlight papers that mention it.</li>
+        <li>By default the graph shows the last ${G.window_days} days plus anchor papers. Switch to <b>All time</b> to see everything; similar-paper lists always search all papers.</li>
         <li>Diamonds are anchor papers: well-known prior work for orientation. Nodes outlined in red were added in the last 7 days.</li>
       </ol>
       <h3>New this week (${fresh.length})</h3>` +
@@ -245,6 +256,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
 
   function show(id) {
     const p = byId[id], rel = G.neighbors[id], top = rel.length ? rel[0][1] : 1;
+    if (!inView(p)) { state.all = true; legend(); }  // 기간 밖 논문을 열면 전체 보기로 전환
     state.sel = id;
     const tags = [...(p.matched.length || p.anchor ? p.matched : ["semantic match"]).map(k => `<span class="kw">${esc(k)}</span>`), ...(G.benchmarks[id] || []).map(b => `<span class="kw bm">${esc(b)}</span>`)];
     $("info").innerHTML = `
@@ -257,7 +269,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
       <div class="kws">${tags.join("")}</div>
       <p class="abstract">${esc(tex(p.abstract))}</p>
       <h3>Most similar papers</h3>` +
-      rel.map(([r, s]) => `<button type="button" class="rel" data-id="${r}"><span class="s">${s.toFixed(2)}</span><span class="t">${byId[r].anchor ? "◆ " : ""}${esc(byId[r].title)}</span><span class="bar"><b style="width:${(100 * s / top).toFixed(0)}%"></b></span></button>`).join("");
+      rel.map(([r, s]) => `<button type="button" class="rel" data-id="${r}"><span class="s">${s.toFixed(2)}</span><span class="t">${byId[r].anchor ? "◆ " : ""}${esc(byId[r].title)}${inView(byId[r]) ? "" : ` <span class="meta">(${byId[r].published.slice(0, 7)})</span>`}</span><span class="bar"><b style="width:${(100 * s / top).toFixed(0)}%"></b></span></button>`).join("");
     $("info").scrollTop = 0;
     render();
     net.selectNodes([id]);
@@ -271,6 +283,10 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
     else if (e.target.id === "back") overview();
   });
   $("k").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { state.k = +b.dataset.k; render(); } });
+  $("win").addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (b && (b.dataset.all === "1") !== state.all) { state.all = b.dataset.all === "1"; legend(); render(); }
+  });
   $("mode").addEventListener("click", e => {
     const b = e.target.closest("button");
     if (b && b.dataset.mode !== state.mode) { state.mode = b.dataset.mode; state.off.clear(); legend(); render(); }

@@ -3,7 +3,8 @@ import json, math, re, pathlib, collections
 import numpy as np
 
 ROOT = pathlib.Path(__file__).parent
-CACHE = ROOT / "data" / "embeddings.npz"
+SHARDS = ROOT / "data" / "embeddings"
+LEGACY = ROOT / "data" / "embeddings.npz"
 CENTROIDS = ROOT / "data" / "centroids.npy"
 STOP = set("""a an the and or of to in on for with by from as at is are was were be been this that these those we our
 it its can which via into than not but also such their they has have more both while how what when where using
@@ -34,16 +35,31 @@ def embed(texts, model):
     return np.array(list(TextEmbedding(model, cache_dir=str(ROOT / ".cache" / "fastembed")).embed(texts)), dtype=np.float32)
 
 
+def shard(pid):
+    """arXiv ID 앞 4자리(YYMM)별로 임베딩 파일을 나눔 → 매일 바뀌는 파일은 이번 달 것 하나뿐 (git 히스토리 증가 억제)."""
+    return pid[:4] if re.match(r"\d{4}\.", pid) else "other"
+
+
 def load_cache():
-    if not CACHE.exists():
-        return {}
-    z = np.load(CACHE)
-    return dict(zip(z["ids"].tolist(), z["vecs"]))
+    files = sorted(SHARDS.glob("*.npz")) + ([LEGACY] if LEGACY.exists() else [])
+    return {i: v for f in files for z in [np.load(f)] for i, v in zip(z["ids"].tolist(), z["vecs"])}
 
 
 def save_cache(cache):
-    CACHE.parent.mkdir(exist_ok=True)
-    np.savez_compressed(CACHE, ids=np.array(list(cache)), vecs=np.stack(list(cache.values())))
+    """구성이 바뀐 shard만 float16으로 다시 쓰고, 빈 shard와 예전 단일 파일은 삭제."""
+    SHARDS.mkdir(parents=True, exist_ok=True)
+    groups = collections.defaultdict(list)
+    for i in cache:
+        groups[shard(i)].append(i)
+    for name, ids in groups.items():
+        f = SHARDS / f"{name}.npz"
+        if f.exists() and set(np.load(f)["ids"].tolist()) == set(ids):
+            continue
+        np.savez_compressed(f, ids=np.array(sorted(ids)), vecs=np.stack([cache[i] for i in sorted(ids)]).astype(np.float16))
+    for f in SHARDS.glob("*.npz"):
+        if f.stem not in groups:
+            f.unlink()
+    LEGACY.unlink(missing_ok=True)
 
 
 def vectors(papers, model, cache):
@@ -53,7 +69,7 @@ def vectors(papers, model, cache):
         cache.update(zip((p["id"] for p in todo), embed([p["title"] + ". " + p["abstract"] for p in todo], model)))
     if not papers:
         return np.zeros((0, 1), np.float32)
-    X = np.stack([cache[p["id"]] for p in papers])
+    X = np.stack([cache[p["id"]] for p in papers]).astype(np.float32)
     return X / np.linalg.norm(X, axis=1, keepdims=True)
 
 
@@ -112,7 +128,7 @@ def main():
     benchmarks = {p["id"]: b for p, t in zip(papers, texts) if (b := [n for n, r in pats.items() if r.search(t)])}
 
     out = {"neighbors": neighbors, "cluster": {i: int(l) for i, l in zip(ids, lab)},
-           "clusters": cluster_labels(texts, lab, k), "benchmarks": benchmarks}
+           "clusters": cluster_labels(texts, lab, k), "benchmarks": benchmarks, "window_days": cfg["graph_window_days"]}
     (ROOT / "docs" / "graph.json").write_text(json.dumps(out))
     print(f"nodes={len(papers)} clusters={k} benchmark_tagged={len(benchmarks)}")
 
