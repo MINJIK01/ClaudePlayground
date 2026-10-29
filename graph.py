@@ -8,7 +8,8 @@ CENTROIDS = ROOT / "data" / "centroids.npy"
 GRAPH = ROOT / "docs" / "graph.json"
 STOP = set("""a an the and or of to in on for with by from as at is are was were be been this that these those we our
 it its can which via into than not but also such their they has have more both while how what when where using
-based use new show shows propose proposed approach method methods paper results model models task tasks""".split())
+based use new show shows propose proposed approach method methods paper results model models task tasks
+respectively respective various existing however often across within without further thus present first two three""".split())
 
 
 def stem(w):
