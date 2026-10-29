@@ -11,14 +11,16 @@ Collects new arXiv papers matching the categories and keywords in `config.json` 
 | `categories` | arXiv 카테고리. 주 카테고리(primary)가 이 목록에 있는 논문만 저장 | arXiv categories. Only papers whose primary category is listed are kept |
 | `keywords` | 각 항목은 제목·abstract 내 AND 조건, 항목끼리는 OR | Each entry is an AND of terms in the title/abstract; entries are OR-ed |
 | `lookback_days` | 수집 대상 기간 (제출일 기준) | Collection window in days (by submission date) |
-| `max_results` | arXiv API 1회 조회 상한 | Maximum results per arXiv API request |
+| `page_size` | arXiv API 페이지당 조회 수 (기간 끝까지 페이지 단위로 조회) | Results per arXiv API page (pages are fetched until the window ends) |
+| `relevance.min` | 키워드가 맞아도 이 값 미만이면 제외. 기존 논문에도 매 실행 적용 | Keyword matches below this are dropped; also re-applied to stored papers |
+| `relevance.recall` | 키워드가 없어도 이 값 이상이면 semantic match로 수집 | Papers at or above this are kept as semantic matches even without a keyword |
 | `graph_top_k` | 그래프에서 논문별로 저장할 유사 논문 수 | Number of similar papers stored per paper for the graph |
 | `benchmarks` | 벤치마크 이름 → abstract에서 찾을 표기 목록 | Benchmark name → spellings to look for in the title/abstract |
 | `anchors` | 키워드·기간과 무관하게 1회 추가할 기준 논문 arXiv ID | arXiv IDs of reference papers added once, regardless of keywords or dates |
 | `embedding_model` | 유사도 계산용 임베딩 모델 (fastembed) | Embedding model used for similarity (fastembed) |
 
-수집한 논문은 `docs/papers.json`에 누적되며 중복 수집되지 않습니다.
-Collected papers accumulate in `docs/papers.json` and are never collected twice.
+관련성(relevance)은 논문 임베딩과 anchor 논문 임베딩 사이 코사인 유사도의 최댓값입니다. 수집한 논문은 `docs/papers.json`에 누적되며 중복 수집되지 않습니다.
+Relevance is the highest cosine similarity between a paper's embedding and any anchor paper's embedding. Collected papers accumulate in `docs/papers.json` and are never collected twice.
 
 ## 실행 / Running
 - 자동 / Scheduled: 평일 02:23 UTC (`.github/workflows/track.yml`) / weekdays at 02:23 UTC
@@ -33,6 +35,8 @@ On GitHub Actions, `graph.py` embeds each title+abstract (`BAAI/bge-small-en-v1.
 - 벤치마크 칩으로 해당 벤치마크를 언급한 논문 강조 / Benchmark chips highlight papers that mention them
 - 마름모 노드는 anchor(기준) 논문 / Diamond nodes are anchor papers
 - 논문당 연결 수 1–5, 키워드 그룹 표시·숨김 / 1–5 links per paper; toggle keyword groups
+- 최근 7일 추가 논문은 테두리 표시, 개요 패널에 New this week 목록 / Papers added in the last 7 days are outlined and listed under New this week
+- 배치·클러스터 번호는 이전 실행 결과에서 이어서 계산해 매일 크게 바뀌지 않음 / Layout and cluster numbering continue from the previous run, so they stay stable day to day
 - 노드 클릭 시 abstract, 주제, 태그, 유사 논문 목록 / Select a node to see its abstract, topic, tags, and most similar papers
 - 개요 패널의 주간 키워드별 논문 수 차트(표 보기 포함) / Weekly papers-per-keyword chart (with a table view) in the overview panel
 - GitHub Pages 설정 / Pages setup: Settings → Pages → Branch `main` / `/docs`
