@@ -12,20 +12,22 @@
   /* Layout: toolbar on top, graph canvas left, reading panel right (stacks below on phones). */
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --fg: #17202c; --muted: #5d6878; --line: #dfe3ea;
-    --edge: #c3c9d3; --accent: #2f5bd3; --accent-soft: #e6ecfb;
-    --k1: #2f5bd3; --k2: #d9822b; --k3: #2e9a6a; --k4: #c8455a; --k5: #8a5cc2; --k6: #1f9bab;
+    --edge: #c3c9d3; --accent: #2f5bd3; --accent-soft: #e6ecfb; --anchor: #17202c;
+    --k1: #2a78d6; --k2: #eb6834; --k3: #1baf7a; --k4: #eda100; --k5: #e87ba4; --k6: #008300; --k7: #6250d6; --k8: #e34948;
     --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
     --bg: #0f141b; --panel: #151b24; --fg: #e3e8ef; --muted: #8c97a7; --line: #262f3b;
-    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840;
-    --k1: #7a9bff; --k2: #f0a35a; --k3: #5cc795; --k4: #f07a8c; --k5: #b48ef0; --k6: #52c6d4; color-scheme: dark;
+    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840; --anchor: #e3e8ef;
+    --k1: #3987e5; --k2: #d95926; --k3: #199e70; --k4: #c98500; --k5: #d55181; --k6: #008300; --k7: #9085e9; --k8: #e66767;
+    color-scheme: dark;
   } }
   :root[data-theme="dark"] {
     --bg: #0f141b; --panel: #151b24; --fg: #e3e8ef; --muted: #8c97a7; --line: #262f3b;
-    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840;
-    --k1: #7a9bff; --k2: #f0a35a; --k3: #5cc795; --k4: #f07a8c; --k5: #b48ef0; --k6: #52c6d4; color-scheme: dark;
+    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840; --anchor: #e3e8ef;
+    --k1: #3987e5; --k2: #d95926; --k3: #199e70; --k4: #c98500; --k5: #d55181; --k6: #008300; --k7: #9085e9; --k8: #e66767;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -35,7 +37,7 @@
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
-  header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; padding-block: 12px;
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding-block: 12px;
     padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
     background: var(--panel); border-bottom: 1px solid var(--line); }
   .brand { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin-right: auto; }
@@ -43,27 +45,32 @@
   #stats { color: var(--muted); font-size: 12px; }
   .ctrl { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-  .seg button { width: 30px; height: 28px; border: 0; border-left: 1px solid var(--line); background: var(--panel); color: var(--fg); font: 500 12px var(--mono); cursor: pointer; }
+  .seg button { min-width: 30px; height: 28px; padding: 0 10px; border: 0; border-left: 1px solid var(--line); background: var(--panel); color: var(--fg); font: 500 12px var(--sans); cursor: pointer; }
+  #k button { padding: 0; font-family: var(--mono); }
   .seg button:first-child { border-left: 0; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
-  #q { width: 220px; max-width: 100%; height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
+  #q { width: 200px; max-width: 100%; height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
 
-  #legend { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; }
+  .row > b { min-width: 76px; color: var(--muted); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--fg); font: 12px var(--sans); cursor: pointer; }
   .chip i { width: 8px; height: 8px; border-radius: 50%; }
+  .chip i.dia { border-radius: 1px; transform: rotate(45deg); }
   .chip span { color: var(--muted); font-family: var(--mono); }
-  .chip[aria-pressed="false"] { opacity: 0.4; }
+  #legend .chip[aria-pressed="false"] { opacity: 0.4; }
+  #bench .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
 
   main { flex: 1; display: flex; min-height: 0; }
   #net { flex: 1; min-width: 0; }
   aside { width: 400px; max-width: 45vw; overflow: auto; padding: 20px; background: var(--panel); border-left: 1px solid var(--line); }
   .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
   aside h2 { margin: 0 0 8px; font-size: 17px; line-height: 1.35; font-weight: 600; text-wrap: balance; }
-  aside h3 { margin: 20px 0 8px; font-size: 13px; font-weight: 600; }
+  aside h3 { margin: 22px 0 8px; font-size: 13px; font-weight: 600; }
   aside p { margin: 0 0 10px; max-width: 65ch; }
   .meta { color: var(--muted); font-size: 12px; }
   .kws { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
   .kw { padding: 1px 8px; border-radius: 4px; background: var(--accent-soft); font-size: 12px; }
+  .kw.bm { background: none; border: 1px solid var(--line); font-family: var(--mono); }
   .links { display: flex; gap: 16px; margin: 12px 0 4px; font-size: 13px; font-weight: 500; }
   .abstract { font-size: 13px; }
   .rel { display: grid; grid-template-columns: 44px 1fr; gap: 4px 10px; width: 100%; padding: 8px 0; border: 0; border-top: 1px solid var(--line); background: none; color: var(--fg); font: 13px/1.4 var(--sans); text-align: left; cursor: pointer; }
@@ -71,8 +78,21 @@
   .rel .s { color: var(--muted); font: 12px var(--mono); }
   .rel .bar { grid-column: 2; height: 3px; border-radius: 2px; background: var(--line); }
   .rel .bar b { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
+  .back { padding: 0; margin-bottom: 14px; border: 0; background: none; color: var(--accent); font: 500 12px var(--sans); cursor: pointer; }
   ol.how { margin: 0 0 10px; padding-left: 18px; }
   ol.how li { margin-bottom: 6px; }
+
+  #trend svg { display: block; width: 100%; height: auto; overflow: visible; }
+  #trend text { fill: var(--muted); font: 10px var(--mono); }
+  #trend .grid { stroke: var(--line); }
+  .tlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; color: var(--muted); font-size: 11px; }
+  .tlegend i { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 2px; }
+  details { margin-top: 8px; font-size: 12px; }
+  summary { color: var(--muted); cursor: pointer; }
+  .tbl { overflow-x: auto; }
+  table { border-collapse: collapse; margin-top: 6px; font: 11px var(--mono); }
+  th, td { padding: 2px 8px 2px 0; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
 
   @media (max-width: 760px) {
     main { flex-direction: column; }
@@ -85,39 +105,47 @@
 <body>
 <header>
   <div class="brand"><h1>Memory Paper Graph</h1><span id="stats" class="mono"></span></div>
+  <div class="ctrl">Color by <div class="seg" id="mode" role="group" aria-label="Color by">
+    <button type="button" data-mode="kw">Keyword</button><button type="button" data-mode="cl">Topic cluster</button></div></div>
   <div class="ctrl">Links per paper <div class="seg" id="k" role="group" aria-label="Links per paper"></div></div>
   <input id="q" type="search" placeholder="Search titles" aria-label="Search titles">
-  <div id="legend" aria-label="Filter by keyword"></div>
+  <div class="row" id="legend" aria-label="Groups"></div>
+  <div class="row" id="bench" aria-label="Filter by benchmark"></div>
 </header>
 <main>
   <div id="net" aria-label="Paper similarity graph"></div>
-  <aside id="info">
-    <p class="eyebrow">About this graph</p>
-    <h2>Recent arXiv papers on persona and memory, linked by textual similarity</h2>
-    <p>Papers are collected every weekday from cs.CL, cs.LG and cs.AI when their title or abstract contains a tracked keyword. Each paper is linked to the papers whose title and abstract are most similar to it (TF-IDF cosine similarity).</p>
-    <ol class="how">
-      <li>Select a paper to read its abstract and see its closest papers.</li>
-      <li>Change <b>Links per paper</b> to show more or fewer connections.</li>
-      <li>Select a keyword chip to show or hide that group.</li>
-    </ol>
-    <p class="meta">Similarity reflects shared vocabulary, so two papers that describe the same idea in different words may not be linked.</p>
-  </aside>
+  <aside id="info"></aside>
 </main>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const tex = s => s.replace(/\\(?:textbf|textit|emph|texttt|textsc)\{([^}]*)\}/g, "$1").replace(/\\([%&_#$])/g, "$1");
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const monday = d => { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() - (t.getUTCDay() + 6) % 7); return t.toISOString().slice(0, 10); };
 
-Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))).then(([papers, graph]) => {
+Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))).then(([papers, G]) => {
   const byId = Object.fromEntries(papers.map(p => [p.id, p]));
-  const kws = [...new Set(papers.map(p => p.matched[0]))];
-  const kwColor = k => css(`--k${kws.indexOf(k) % 6 + 1}`);
-  const state = {k: 2, q: "", off: new Set(), sel: null};
-  const latest = papers.reduce((m, p) => p.published > m ? p.published : m, "");
+  const tracked = papers.filter(p => !p.anchor);
+  const kws = [...new Set(tracked.map(p => p.matched[0]))];
+  const benches = Object.entries(Object.values(G.benchmarks).flat().reduce((m, b) => (m[b] = (m[b] || 0) + 1, m), {})).sort((a, b) => b[1] - a[1]);
+  const clusterName = c => G.clusters[c].join(", ");
+  const group = p => state.mode === "cl" ? G.cluster[p.id] : p.anchor ? "anchor" : p.matched[0];
+  const groups = () => state.mode === "kw" ? kws : G.clusters.map((_, c) => c);
+  const color = g => g === "anchor" ? css("--anchor") : css(`--k${groups().indexOf(g) % 8 + 1}`);
+  const kwColor = k => css(`--k${kws.indexOf(k) % 8 + 1}`);
+  const state = {k: 2, q: "", mode: "kw", off: new Set(), bench: null, sel: null};
+  const latest = tracked.reduce((m, p) => p.published > m ? p.published : m, "");
 
   $("k").innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" data-k="${n}">${n}</button>`).join("");
-  $("legend").innerHTML = kws.map(k => `<button type="button" class="chip" data-kw="${esc(k)}"><i></i>${esc(k)}<span>${papers.filter(p => p.matched[0] === k).length}</span></button>`).join("");
+  $("bench").innerHTML = benches.length ? "<b>Benchmarks</b>" + benches.map(([b, n]) => `<button type="button" class="chip" data-bench="${esc(b)}">${esc(b)}<span>${n}</span></button>`).join("") : "";
+
+  function legend() {
+    const count = g => papers.filter(p => group(p) === g).length;
+    const chip = (g, name, cls = "") => `<button type="button" class="chip" data-g="${esc(g)}"><i class="${cls}" style="background:${color(g)}"></i>${esc(name)}<span>${count(g)}</span></button>`;
+    $("legend").innerHTML = `<b>${state.mode === "kw" ? "Keywords" : "Topics"}</b>` +
+      groups().map(g => chip(g, state.mode === "kw" ? g : clusterName(g))).join("") +
+      (state.mode === "kw" && papers.length > tracked.length ? chip("anchor", "Anchor papers", "dia") : "");
+  }
 
   const nodes = new vis.DataSet(), links = new vis.DataSet();
   const net = new vis.Network($("net"), {nodes, edges: links}, {
@@ -129,7 +157,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))
 
   function render() {
     const uniq = {}, deg = {}, near = new Set(state.sel ? [state.sel] : []);
-    for (const [a, nb] of Object.entries(graph))
+    for (const [a, nb] of Object.entries(G.neighbors))
       for (const [b, s] of nb.slice(0, state.k)) uniq[[a, b].sort()] = [a, b, s];
     const active = Object.values(uniq);
     active.forEach(([a, b]) => {
@@ -137,13 +165,14 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))
       if (a === state.sel) near.add(b);
       if (b === state.sel) near.add(a);
     });
-    const lit = p => !state.off.has(p.matched[0]) && (!state.q || p.title.toLowerCase().includes(state.q)) && (!state.sel || near.has(p.id));
+    const lit = p => !state.off.has(String(group(p))) && (!state.q || p.title.toLowerCase().includes(state.q))
+      && (!state.bench || (G.benchmarks[p.id] || []).includes(state.bench)) && (!state.sel || near.has(p.id));
     const fg = css("--fg"), muted = css("--muted"), accent = css("--accent"), edge = css("--edge");
     nodes.update(papers.map(p => ({
-      id: p.id, value: 1 + (deg[p.id] || 0), title: p.title,
+      id: p.id, value: 1 + (deg[p.id] || 0), title: p.title, shape: p.anchor ? "diamond" : "dot",
       label: p.title.length > 30 ? p.title.slice(0, 30) + "…" : p.title,
-      color: {background: kwColor(p.matched[0]), highlight: {background: accent, border: accent}},
-      font: {color: p.id === state.sel ? fg : muted}, opacity: lit(p) ? 1 : 0.12,
+      color: {background: color(group(p)), highlight: {background: accent, border: accent}},
+      font: {color: p.id === state.sel || (p.anchor && lit(p)) ? fg : muted}, opacity: lit(p) ? 1 : 0.12,
     })));
     links.clear();
     links.add(active.map(([a, b, s]) => ({
@@ -151,47 +180,106 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))
       color: {color: state.sel && (a === state.sel || b === state.sel) ? accent : edge, highlight: accent,
               opacity: lit(byId[a]) && lit(byId[b]) ? 1 : 0.15},
     })));
-    $("stats").textContent = `${papers.length} papers · ${active.length} links · latest ${latest}`;
+    $("stats").textContent = `${tracked.length} papers · ${papers.length - tracked.length} anchors · ${active.length} links · latest ${latest}`;
     document.querySelectorAll("#k button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.k === state.k));
-    document.querySelectorAll(".chip").forEach(c => {
-      c.setAttribute("aria-pressed", !state.off.has(c.dataset.kw));
-      c.querySelector("i").style.background = kwColor(c.dataset.kw);
+    document.querySelectorAll("#mode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === state.mode));
+    document.querySelectorAll("#legend .chip").forEach(c => {
+      c.setAttribute("aria-pressed", !state.off.has(c.dataset.g));
+      c.querySelector("i").style.background = color(c.dataset.g === "anchor" || state.mode === "kw" ? c.dataset.g : +c.dataset.g);
     });
+    document.querySelectorAll("#bench .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.bench === state.bench));
+  }
+
+  function trend() {
+    const weeks = [...new Set(tracked.map(p => monday(p.published)))].sort();
+    const counts = weeks.map(w => kws.map(k => tracked.filter(p => monday(p.published) === w && p.matched[0] === k).length));
+    const max = Math.max(1, ...counts.map(c => c.reduce((a, b) => a + b, 0)));
+    const W = 360, H = 150, T = 10, L = 24, B = 18, bw = Math.min(36, (W - L) / weeks.length - 6);
+    const x = i => L + (i + 0.5) * (W - L) / weeks.length - bw / 2, y = v => T + (H - B - T) * (1 - v / max);
+    let bars = "";
+    counts.forEach((c, i) => {
+      let acc = 0;
+      c.forEach((v, j) => {
+        if (!v) return;
+        const top = y(acc + v), h = y(acc) - top - 2;
+        bars += `<rect x="${x(i).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h, 1).toFixed(1)}" rx="2" fill="${kwColor(kws[j])}"><title>Week of ${weeks[i]} · ${esc(kws[j])}: ${v}</title></rect>`;
+        acc += v;
+      });
+    });
+    const step = Math.ceil(weeks.length / 6);
+    const xl = weeks.map((w, i) => i % step ? "" : `<text x="${(x(i) + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle">${w.slice(5)}</text>`).join("");
+    return `<h3>Papers per week by keyword</h3>
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Stacked bar chart of papers per week by keyword">
+        <line class="grid" x1="${L}" x2="${W}" y1="${y(max)}" y2="${y(max)}"/><line class="grid" x1="${L}" x2="${W}" y1="${y(0)}" y2="${y(0)}"/>
+        <text x="${L - 6}" y="${y(max) + 3}" text-anchor="end">${max}</text><text x="${L - 6}" y="${y(0) + 3}" text-anchor="end">0</text>
+        ${bars}${xl}</svg>
+      <div class="tlegend">${kws.map(k => `<span><i style="background:${kwColor(k)}"></i>${esc(k)}</span>`).join("")}</div>
+      <details><summary>Show as table</summary><div class="tbl"><table><tr><th>Week of</th>${kws.map(k => `<th>${esc(k)}</th>`).join("")}<th>Total</th></tr>
+        ${weeks.map((w, i) => `<tr><td>${w}</td>${counts[i].map(v => `<td>${v}</td>`).join("")}<td>${counts[i].reduce((a, b) => a + b, 0)}</td></tr>`).join("")}</table></div></details>`;
+  }
+
+  function overview() {
+    state.sel = null;
+    $("info").innerHTML = `
+      <p class="eyebrow">About this graph</p>
+      <h2>Recent arXiv papers on persona and memory, linked by semantic similarity</h2>
+      <p>Papers are collected every weekday from cs.CL, cs.LG and cs.AI when their title or abstract contains a tracked keyword. Each paper is linked to the papers whose title and abstract embeddings (bge-small-en-v1.5) are closest by cosine similarity.</p>
+      <ol class="how">
+        <li>Select a paper to read its abstract and see its closest papers.</li>
+        <li>Switch <b>Color by</b> to see topic clusters, labeled by their most distinctive terms.</li>
+        <li>Select a benchmark to highlight papers that mention it.</li>
+        <li>Diamonds are anchor papers: well-known prior work for orientation.</li>
+      </ol>` + trend();
+    $("info").scrollTop = 0;
+    render();
   }
 
   function show(id) {
-    const p = byId[id], rel = graph[id], top = rel.length ? rel[0][1] : 1;
+    const p = byId[id], rel = G.neighbors[id], top = rel.length ? rel[0][1] : 1;
     state.sel = id;
+    const tags = [...p.matched.map(k => `<span class="kw">${esc(k)}</span>`), ...(G.benchmarks[id] || []).map(b => `<span class="kw bm">${esc(b)}</span>`)];
     $("info").innerHTML = `
-      <p class="eyebrow mono">arXiv ${esc(p.id)} · ${esc(p.primary)} · ${esc(p.published)}</p>
+      <button type="button" class="back" id="back">← Overview</button>
+      <p class="eyebrow mono">${p.anchor ? "Anchor paper · " : ""}arXiv ${esc(p.id)} · ${esc(p.primary)} · ${esc(p.published)}</p>
       <h2>${esc(p.title)}</h2>
       <div class="meta">${esc(p.authors.slice(0, 6).join(", "))}${p.authors.length > 6 ? " et al." : ""}</div>
       <div class="links"><a href="${esc(p.url)}" target="_blank" rel="noopener">arXiv page ↗</a><a href="${esc(p.url.replace("/abs/", "/pdf/"))}" target="_blank" rel="noopener">PDF ↗</a></div>
-      <div class="kws">${p.matched.map(k => `<span class="kw">${esc(k)}</span>`).join("")}</div>
+      <div class="meta">Topic: ${esc(clusterName(G.cluster[id]))}</div>
+      <div class="kws">${tags.join("")}</div>
       <p class="abstract">${esc(tex(p.abstract))}</p>
       <h3>Most similar papers</h3>` +
-      rel.map(([r, s]) => `<button type="button" class="rel" data-id="${r}"><span class="s">${s.toFixed(2)}</span><span class="t">${esc(byId[r].title)}</span><span class="bar"><b style="width:${(100 * s / top).toFixed(0)}%"></b></span></button>`).join("");
+      rel.map(([r, s]) => `<button type="button" class="rel" data-id="${r}"><span class="s">${s.toFixed(2)}</span><span class="t">${byId[r].anchor ? "◆ " : ""}${esc(byId[r].title)}</span><span class="bar"><b style="width:${(100 * s / top).toFixed(0)}%"></b></span></button>`).join("");
     $("info").scrollTop = 0;
     render();
     net.selectNodes([id]);
     net.focus(id, {scale: 1.1, animation: {duration: 400}});
   }
 
-  net.on("click", e => {
-    if (e.nodes.length) show(e.nodes[0]);
-    else if (state.sel) { state.sel = null; render(); }
+  net.on("click", e => { if (e.nodes.length) show(e.nodes[0]); else if (state.sel) overview(); });
+  $("info").addEventListener("click", e => {
+    const b = e.target.closest(".rel");
+    if (b) show(b.dataset.id);
+    else if (e.target.id === "back") overview();
   });
-  $("info").addEventListener("click", e => { const b = e.target.closest(".rel"); if (b) show(b.dataset.id); });
   $("k").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { state.k = +b.dataset.k; render(); } });
+  $("mode").addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (b && b.dataset.mode !== state.mode) { state.mode = b.dataset.mode; state.off.clear(); legend(); render(); }
+  });
   $("legend").addEventListener("click", e => {
     const c = e.target.closest(".chip");
     if (!c) return;
-    state.off.has(c.dataset.kw) ? state.off.delete(c.dataset.kw) : state.off.add(c.dataset.kw);
+    state.off.has(c.dataset.g) ? state.off.delete(c.dataset.g) : state.off.add(c.dataset.g);
     render();
   });
+  $("bench").addEventListener("click", e => {
+    const c = e.target.closest(".chip");
+    if (c) { state.bench = state.bench === c.dataset.bench ? null : c.dataset.bench; render(); }
+  });
   $("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
-  render();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { legend(); state.sel ? show(state.sel) : overview(); });
+  legend();
+  overview();
 }).catch(() => {
   $("info").innerHTML = '<p class="eyebrow">Data unavailable</p><p>The paper data could not be loaded. Run the tracker workflow once so that docs/papers.json and docs/graph.json exist, then reload this page.</p>';
 });

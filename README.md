@@ -1,7 +1,7 @@
 # arXiv Paper Tracker
 
-`config.json`의 카테고리·키워드로 arXiv 신규 논문을 평일마다 자동 수집해 `papers/YYYY-MM-DD.md`로 커밋합니다. 외부 의존성과 API 키는 필요 없습니다.
-Collects new arXiv papers matching the categories and keywords in `config.json` every weekday and commits them to `papers/YYYY-MM-DD.md`. No external dependencies or API keys are required.
+`config.json`의 카테고리·키워드로 arXiv 신규 논문을 평일마다 자동 수집해 `papers/YYYY-MM-DD.md`로 커밋합니다. API 키는 필요 없습니다.
+Collects new arXiv papers matching the categories and keywords in `config.json` every weekday and commits them to `papers/YYYY-MM-DD.md`. No API keys are required.
 
 **Paper graph / 논문 그래프:** https://minjik01.github.io/Memory-paper-Memory/
 
@@ -13,6 +13,9 @@ Collects new arXiv papers matching the categories and keywords in `config.json` 
 | `lookback_days` | 수집 대상 기간 (제출일 기준) | Collection window in days (by submission date) |
 | `max_results` | arXiv API 1회 조회 상한 | Maximum results per arXiv API request |
 | `graph_top_k` | 그래프에서 논문별로 저장할 유사 논문 수 | Number of similar papers stored per paper for the graph |
+| `benchmarks` | 벤치마크 이름 → abstract에서 찾을 표기 목록 | Benchmark name → spellings to look for in the title/abstract |
+| `anchors` | 키워드·기간과 무관하게 1회 추가할 기준 논문 arXiv ID | arXiv IDs of reference papers added once, regardless of keywords or dates |
+| `embedding_model` | 유사도 계산용 임베딩 모델 (fastembed) | Embedding model used for similarity (fastembed) |
 
 수집한 논문은 `docs/papers.json`에 누적되며 중복 수집되지 않습니다.
 Collected papers accumulate in `docs/papers.json` and are never collected twice.
@@ -20,15 +23,18 @@ Collected papers accumulate in `docs/papers.json` and are never collected twice.
 ## 실행 / Running
 - 자동 / Scheduled: 평일 02:23 UTC (`.github/workflows/track.yml`) / weekdays at 02:23 UTC
 - 수동 / Manual: Actions → arXiv tracker → Run workflow (`days`로 과거 기간 백필 / backfill with `days`)
-- 로컬 / Local: `python tracker.py [days] && python graph.py`
+- 로컬 / Local: `pip install -r requirements.txt && python tracker.py [days] && python graph.py`
 
 ## 논문 그래프 / Paper graph
-`graph.py`가 제목+abstract의 TF-IDF 코사인 유사도로 논문별 상위 k개 유사 논문을 계산해 `docs/graph.json`에 저장하고, `docs/index.html`이 이를 인터랙티브 그래프로 보여줍니다.
-`graph.py` computes each paper's top-k most similar papers by TF-IDF cosine similarity over title and abstract and writes them to `docs/graph.json`; `docs/index.html` renders them as an interactive graph.
+`graph.py`가 GitHub Actions에서 제목+abstract 임베딩(`BAAI/bge-small-en-v1.5`, CPU)을 계산하고, 코사인 유사도 상위 k개 이웃, k-means 주제 클러스터, 벤치마크 태그를 `docs/graph.json`에 저장합니다. 임베딩은 `data/embeddings.npz`에 캐시되어 새 논문만 계산합니다.
+On GitHub Actions, `graph.py` embeds each title+abstract (`BAAI/bge-small-en-v1.5`, CPU) and writes top-k cosine neighbors, k-means topic clusters, and benchmark tags to `docs/graph.json`. Embeddings are cached in `data/embeddings.npz`, so only new papers are embedded.
 
-- 논문당 연결 수 1–5 선택 / Choose 1–5 links per paper
-- 키워드 칩으로 그룹 표시·숨김 / Toggle keyword groups with the chips
-- 노드 클릭 시 abstract와 유사 논문 목록 / Select a node to see its abstract and most similar papers
+- 키워드 / 주제 클러스터 색상 전환. 클러스터 라벨은 클러스터 내 특징적인 TF-IDF 단어 / Color by keyword or topic cluster; cluster labels are their most distinctive TF-IDF terms
+- 벤치마크 칩으로 해당 벤치마크를 언급한 논문 강조 / Benchmark chips highlight papers that mention them
+- 마름모 노드는 anchor(기준) 논문 / Diamond nodes are anchor papers
+- 논문당 연결 수 1–5, 키워드 그룹 표시·숨김 / 1–5 links per paper; toggle keyword groups
+- 노드 클릭 시 abstract, 주제, 태그, 유사 논문 목록 / Select a node to see its abstract, topic, tags, and most similar papers
+- 개요 패널의 주간 키워드별 논문 수 차트(표 보기 포함) / Weekly papers-per-keyword chart (with a table view) in the overview panel
 - GitHub Pages 설정 / Pages setup: Settings → Pages → Branch `main` / `/docs`
 
 ## 요약 / Summaries
