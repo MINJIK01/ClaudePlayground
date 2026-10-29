@@ -1,0 +1,25 @@
+name: arXiv tracker
+on:
+  schedule:
+    - cron: "23 2 * * 1-5"  # 평일 02:23 UTC (11:23 KST), arXiv 공지 이후
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "lookback days (백필용)"
+        default: "3"
+permissions:
+  contents: write
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tracker.py ${{ inputs.days }}
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add papers seen.json
+          git diff --cached --quiet || (git commit -m "papers: $(date -u +%F)" && git push)
