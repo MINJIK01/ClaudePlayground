@@ -141,6 +141,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
   const kwColor = k => css(`--k${kws.indexOf(k) % 8 + 1}`);
   const state = {k: 2, q: "", mode: "kw", off: new Set(), bench: null, sel: null, fresh: false, all: false};
   // 기본은 최근 window_days 논문 + anchor만 표시 (데이터는 전부 유지, 유사 논문 목록은 전체 기준)
+  G.window_days = G.window_days || 90;  // 페이지가 먼저 배포되고 데이터가 아직 옛 형식일 때를 대비한 기본값
   const winStart = new Date(Date.now() - G.window_days * 864e5).toISOString().slice(0, 10);
   const inView = p => p.anchor || state.all || p.published >= winStart;
   $("winLabel").textContent = `Last ${G.window_days} days`;
