@@ -12,8 +12,9 @@ Collects new arXiv papers matching the categories and keywords in `config.json` 
 | `keywords` | 각 항목은 제목·abstract 내 AND 조건, 항목끼리는 OR | Each entry is an AND of terms in the title/abstract; entries are OR-ed |
 | `lookback_days` | 수집 대상 기간 (제출일 기준) | Collection window in days (by submission date) |
 | `page_size` | arXiv API 페이지당 조회 수 (기간 끝까지 페이지 단위로 조회) | Results per arXiv API page (pages are fetched until the window ends) |
-| `relevance.min` | 키워드가 맞아도 이 값 미만이면 제외. 기존 논문에도 매 실행 적용 | Keyword matches below this are dropped; also re-applied to stored papers |
-| `relevance.recall` | 키워드가 없어도 이 값 이상이면 semantic match로 수집 | Papers at or above this are kept as semantic matches even without a keyword |
+| `relevance.min` | 키워드가 맞아도 이 값 미만이면 제외. 수집 규칙은 기존 논문에도 매 실행 다시 적용 | Keyword matches below this are dropped; the rules are re-applied to stored papers on every run |
+| `relevance.recall` | 키워드가 없어도 이 값 이상이고 `recall_terms` 중 하나가 있으면 semantic match로 수집 | Papers at or above this that contain one of `recall_terms` are kept as semantic matches even without a keyword |
+| `relevance.recall_terms` | semantic match에 필요한 핵심어 (부분 일치) | Core terms a semantic match must contain (substring match) |
 | `graph_top_k` | 그래프에서 논문별로 저장할 유사 논문 수 | Number of similar papers stored per paper for the graph |
 | `benchmarks` | 벤치마크 이름 → abstract에서 찾을 표기 목록 | Benchmark name → spellings to look for in the title/abstract |
 | `anchors` | 키워드·기간과 무관하게 1회 추가할 기준 논문 arXiv ID | arXiv IDs of reference papers added once, regardless of keywords or dates |

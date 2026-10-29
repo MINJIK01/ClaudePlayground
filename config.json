@@ -10,7 +10,7 @@
   ],
   "lookback_days": 3,
   "page_size": 500,
-  "relevance": {"min": 0.72, "recall": 0.87},
+  "relevance": {"min": 0.72, "recall": 0.85, "recall_terms": ["memor", "persona", "remember"]},
   "graph_top_k": 5,
   "benchmarks": {
     "LoCoMo": ["LoCoMo"],
