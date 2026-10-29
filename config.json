@@ -10,5 +10,22 @@
   ],
   "lookback_days": 3,
   "max_results": 200,
-  "graph_top_k": 5
+  "graph_top_k": 5,
+  "benchmarks": {
+    "LoCoMo": ["LoCoMo"],
+    "LongMemEval": ["LongMemEval"],
+    "PersonaChat": ["PersonaChat", "Persona-Chat"],
+    "MSC": ["MSC", "Multi-Session Chat"],
+    "PerLTQA": ["PerLTQA"],
+    "LaMP": ["LaMP"],
+    "PersonaMem": ["PersonaMem"],
+    "PrefEval": ["PrefEval"],
+    "MemBench": ["MemBench"],
+    "MemoryAgentBench": ["MemoryAgentBench"],
+    "DuLeMon": ["DuLeMon"],
+    "LongBench": ["LongBench"],
+    "RULER": ["RULER"]
+  },
+  "anchors": ["2310.08560", "2304.03442", "2305.10250", "2402.17753", "2410.10813", "1801.07243", "2107.07567", "2502.12110", "2504.19413"],
+  "embedding_model": "BAAI/bge-small-en-v1.5"
 }

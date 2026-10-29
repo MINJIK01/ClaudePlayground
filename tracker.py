@@ -40,6 +40,11 @@ def to_md(p, cfg):
             f"<details><summary>Abstract</summary>\n\n{p['abstract']}\n</details>\n")
 
 
+def fetch(params):
+    with urllib.request.urlopen(API + urllib.parse.urlencode(params), timeout=60) as r:
+        return list(parse(r.read()))
+
+
 def main():
     cfg = json.loads((ROOT / "config.json").read_text())
     days = int(sys.argv[1]) if len(sys.argv) > 1 else cfg["lookback_days"]
@@ -49,24 +54,28 @@ def main():
 
     params = {"search_query": build_query(cfg), "sortBy": "submittedDate",
               "sortOrder": "descending", "max_results": cfg["max_results"]}
-    with urllib.request.urlopen(API + urllib.parse.urlencode(params), timeout=60) as r:
-        papers = list(parse(r.read()))
+    papers = fetch(params)
 
     cutoff = (dt.date.today() - dt.timedelta(days=days)).isoformat()
     new = [p for p in papers if p["published"] >= cutoff and p["id"] not in seen
            and p["primary"] in cfg["categories"] and matched(p, cfg)]
     print(f"fetched={len(papers)} new={len(new)}")
-    if not new:
-        return
 
-    out = ROOT / "papers" / f"{dt.date.today()}.md"
-    out.parent.mkdir(exist_ok=True)
-    head = "" if out.exists() else f"# {dt.date.today()}\n\n"
-    with out.open("a") as f:
-        f.write(head + "\n".join(to_md(p, cfg) for p in new))
-    for p in new:
+    # anchor: 키워드·기간 필터 없이 config에 지정한 기준 논문을 1회만 추가
+    todo = [a for a in cfg["anchors"] if a not in seen]
+    anchors = fetch({"id_list": ",".join(todo), "max_results": len(todo)}) if todo else []
+    for p in anchors:
+        p["anchor"] = True
+    for p in new + anchors:
         p["matched"] = matched(p, cfg)
-    db_path.write_text(json.dumps(db + new, ensure_ascii=False, indent=0))
+    if new:
+        out = ROOT / "papers" / f"{dt.date.today()}.md"
+        out.parent.mkdir(exist_ok=True)
+        head = "" if out.exists() else f"# {dt.date.today()}\n\n"
+        with out.open("a") as f:
+            f.write(head + "\n".join(to_md(p, cfg) for p in new))
+    if new or anchors:
+        db_path.write_text(json.dumps(db + new + anchors, ensure_ascii=False, indent=0))
 
 
 if __name__ == "__main__":
