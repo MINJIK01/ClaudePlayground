@@ -3,7 +3,10 @@
   "keywords": [
     ["persona", "memory"],
     ["persona", "consistency"],
-    ["memory", "language model"]
+    ["long-term memory"],
+    ["conversational memory"],
+    ["episodic memory"],
+    ["memory-augmented"]
   ],
   "lookback_days": 3,
   "max_results": 200
