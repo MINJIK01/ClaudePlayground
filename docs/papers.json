@@ -20,7 +20,8 @@
 "matched": [
 "persona + memory",
 "long-term memory"
-]
+],
+"relevance": 0.915
 },
 {
 "id": "2610.34767",
@@ -38,7 +39,8 @@
 "primary": "cs.AI",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.857
 },
 {
 "id": "2610.33651",
@@ -59,7 +61,8 @@
 "primary": "cs.AI",
 "matched": [
 "persona + consistency"
-]
+],
+"relevance": 0.814
 },
 {
 "id": "2610.33432",
@@ -82,7 +85,8 @@
 "matched": [
 "persona + memory",
 "long-term memory"
-]
+],
+"relevance": 0.882
 },
 {
 "id": "2610.32752",
@@ -101,7 +105,8 @@
 "primary": "cs.AI",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.877
 },
 {
 "id": "2610.32443",
@@ -126,7 +131,8 @@
 "primary": "cs.CL",
 "matched": [
 "persona + consistency"
-]
+],
+"relevance": 0.788
 },
 {
 "id": "2610.31314",
@@ -145,29 +151,8 @@
 "primary": "cs.CL",
 "matched": [
 "persona + memory"
-]
-},
-{
-"id": "2610.30422",
-"url": "http://arxiv.org/abs/2610.30422v1",
-"title": "Memory-Augmented Online Test-Time Adaptation for EEG Motor Imagery via Perturbation Consistency and Confidence Calibration",
-"abstract": "Recently, electroencephalography (EEG)-based brain--computer interfaces (BCIs) have gained traction as portable neural measurement systems. However, the practical deployment of these instruments is often hindered by nonstationarity and cross-subject distribution shifts, which lead to significant intersubject inconsistency. Existing adaptation methods remain impractical for real-time measurement scenarios, as they typically require offline access to source or aggregated target data. To address these challenges, this article proposes memory-augmented online test-time adaptation (OTTA) with perturbation consistency and confidence calibration (MOPC), a source-free framework designed to enhance the reliability of BCI instrumentation. MOPC enables the measurement system to update its decoding parameters on the fly during the inference stage, facilitating single-pass adaptation without accessing sensitive source data. We introduce random-mask perturbations to enforce prediction consistency against inherent EEG signal noise and acquisition artifacts. Furthermore, a confidence-calibrated reweighting loss is designed to integrate feature-space similarity, effectively mitigating unreliable pseudolabels and class imbalance during continuous signal acquisition. To ensure system stability and prevent the catastrophic forgetting of established neural patterns, a lightweight memory module is incorporated to regularize parameter updates within a tight latency budget. Evaluated on the BCI IV IIb and OpenBMI datasets, MOPC achieves state-of-the-art performance, outperforming prior methods by 2.22~\\% and 3.67~\\%, respectively, while keeping the per-trial adaptation latency to approximately 40--60 ms. This study provides a robust, recalibration-free solution for real-time EEG decoding, marking a significant advancement in the precision and usability of practical BCI measurement instruments.",
-"published": "2026-10-21",
-"authors": [
-"Kunkun Zhang",
-"Kehao Wu",
-"Zhitao Chen",
-"Haigen Hu",
-"Qianwei Zhou"
 ],
-"cats": [
-"cs.LG",
-"eess.SP"
-],
-"primary": "cs.LG",
-"matched": [
-"memory-augmented"
-]
+"relevance": 0.878
 },
 {
 "id": "2610.29995",
@@ -193,7 +178,8 @@
 "primary": "cs.CL",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.871
 },
 {
 "id": "2610.29339",
@@ -216,7 +202,8 @@
 "primary": "cs.CL",
 "matched": [
 "memory-augmented"
-]
+],
+"relevance": 0.815
 },
 {
 "id": "2610.29249",
@@ -244,7 +231,8 @@
 "matched": [
 "persona + memory",
 "long-term memory"
-]
+],
+"relevance": 0.886
 },
 {
 "id": "2610.27913",
@@ -266,7 +254,8 @@
 "primary": "cs.AI",
 "matched": [
 "persona + consistency"
-]
+],
+"relevance": 0.836
 },
 {
 "id": "2610.27700",
@@ -289,7 +278,8 @@
 "primary": "cs.CL",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.881
 },
 {
 "id": "2610.27400",
@@ -312,7 +302,8 @@
 "primary": "cs.AI",
 "matched": [
 "memory-augmented"
-]
+],
+"relevance": 0.841
 },
 {
 "id": "2610.27032",
@@ -332,7 +323,8 @@
 "primary": "cs.AI",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.91
 },
 {
 "id": "2610.26554",
@@ -357,7 +349,8 @@
 "matched": [
 "persona + memory",
 "long-term memory"
-]
+],
+"relevance": 0.886
 },
 {
 "id": "2610.25996",
@@ -376,7 +369,8 @@
 "primary": "cs.AI",
 "matched": [
 "episodic memory"
-]
+],
+"relevance": 0.855
 },
 {
 "id": "2610.25707",
@@ -399,7 +393,8 @@
 "primary": "cs.AI",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.723
 },
 {
 "id": "2610.25425",
@@ -426,7 +421,8 @@
 "primary": "cs.CL",
 "matched": [
 "memory-augmented"
-]
+],
+"relevance": 0.86
 },
 {
 "id": "2610.23812",
@@ -455,7 +451,8 @@
 "matched": [
 "persona + memory",
 "long-term memory"
-]
+],
+"relevance": 0.864
 },
 {
 "id": "2610.23598",
@@ -477,7 +474,8 @@
 "matched": [
 "long-term memory",
 "episodic memory"
-]
+],
+"relevance": 0.874
 },
 {
 "id": "2610.23313",
@@ -498,7 +496,8 @@
 "primary": "cs.AI",
 "matched": [
 "conversational memory"
-]
+],
+"relevance": 0.905
 },
 {
 "id": "2610.24032",
@@ -515,7 +514,8 @@
 "primary": "cs.LG",
 "matched": [
 "episodic memory"
-]
+],
+"relevance": 0.791
 },
 {
 "id": "2610.22686",
@@ -539,7 +539,8 @@
 "primary": "cs.CL",
 "matched": [
 "episodic memory"
-]
+],
+"relevance": 0.879
 },
 {
 "id": "2610.22668",
@@ -565,7 +566,8 @@
 "primary": "cs.AI",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.882
 },
 {
 "id": "2610.22196",
@@ -586,7 +588,8 @@
 "primary": "cs.CL",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.868
 },
 {
 "id": "2610.21900",
@@ -605,7 +608,8 @@
 "primary": "cs.CL",
 "matched": [
 "persona + memory"
-]
+],
+"relevance": 0.904
 },
 {
 "id": "2610.21804",
@@ -628,7 +632,8 @@
 "primary": "cs.AI",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.809
 },
 {
 "id": "2610.21405",
@@ -648,7 +653,8 @@
 "primary": "cs.AI",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.885
 },
 {
 "id": "2610.21165",
@@ -665,7 +671,8 @@
 "primary": "cs.CL",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.876
 },
 {
 "id": "2610.21126",
@@ -683,7 +690,8 @@
 "primary": "cs.CL",
 "matched": [
 "long-term memory"
-]
+],
+"relevance": 0.804
 },
 {
 "id": "2310.08560",
@@ -892,5 +900,169 @@
 "primary": "cs.CL",
 "anchor": true,
 "matched": []
+},
+{
+"id": "2610.36948",
+"url": "http://arxiv.org/abs/2610.36948v1",
+"title": "Self-Keyed In-Parameter Memorization for External Memory-Free Dialogue Recall in Frozen Language Models",
+"abstract": "A large language model maintains conversational content in an external storage that is outside the model and grows as the dialogue continues. This work assumes an environment where a language model has no external memory and no prior knowledge of the future question or its answer. The motivation is to research whether a dialogue can be stored in the model parameters and later answer a question about it. This work proposes self-keyed in-parameter memorization (SKIM), a closed-form method in which the model generates its own questions about each dialogue turn and writes those questions into its parameters as the keys that later retrieve the turn's content. Generating many varied questions for each turn allows a later user question to match one even when phrased differently, and its answer is recalled from the parameters alone. Evaluated on five language models, SKIM recalls most stored dialogue turns from later user questions, and it answers from the model parameters without any external storage.",
+"published": "2026-10-27",
+"authors": [
+"XinYu Piao",
+"Myunghoon Ryu",
+"Joongheon Kim",
+"Jong-Kook Kim"
+],
+"cats": [
+"cs.CL",
+"cs.AI"
+],
+"primary": "cs.CL",
+"relevance": 0.874,
+"matched": [],
+"added": "2026-10-29"
+},
+{
+"id": "2610.36918",
+"url": "http://arxiv.org/abs/2610.36918v1",
+"title": "TrawMem: Reframing Agent Memory as Task-Oriented Role-Adaptive Workspaces",
+"abstract": "Large language model (LLM) agents rely on memory systems to leverage long-term interactions, yet existing systems typically retrieve memories based on their relevance to the current query and use them as contextual evidence. However, relevance alone does not characterize how a memory contributes to task solving: the same memory may serve different roles across tasks, such as directly supporting the answer or linking to complementary memories with weaker semantic relevance but necessary information. We therefore reframe agent memory systems as Task-Oriented Role-Adaptive Workspaces, where memories are selected and organized by their task-oriented roles and relations. Based on this view, we propose TrawMem, which organizes interaction histories into local threads and constructs task-oriented workspaces by assigning roles and jointly selecting complementary memories. Experiments on LoCoMo and MemGallery with four open- and closed-source backbones show consistent improvements over representative memory systems, with macro-F1 gains of 2.23-3.14 points. On LoCoMo, TrawMem improves the LLM-Judge score over SimpleMem by 4.07 and 4.31 percentage points on Qwen3.5-9B and DeepSeek-V4-Flash, respectively, while requiring approximately 12.8% and 5.1% fewer context tokens, respectively.",
+"published": "2026-10-27",
+"authors": [
+"Mingyu Zhang",
+"Zixu Li",
+"Zhiheng Fu",
+"Zhiwei Chen",
+"Jinhe Bi",
+"Yupeng Hu"
+],
+"cats": [
+"cs.CL"
+],
+"primary": "cs.CL",
+"relevance": 0.928,
+"matched": [],
+"added": "2026-10-29"
+},
+{
+"id": "2610.36652",
+"url": "http://arxiv.org/abs/2610.36652v1",
+"title": "Remembering Is Not Enough: Refining Memories and Learning When to Use Them in Multi-Agent Systems",
+"abstract": "Memory helps LLM-based multi-agent systems reuse experience, but stored advice can be flawed or applied in the wrong situation. Team-level success or failure alone cannot reliably show whether a memory needs correction or should not have been used. We propose DiscernMem, a training-free framework that improves both memory quality and memory use. To improve quality, Defect-Aware Memory Refinement (DMR) compares team executions with a single memory and with no memory, diagnoses rule defects, and tests repairs on current and earlier tasks to guard against losing previously useful behavior. To guide appropriate use, Boundary-Learning Meta-Memory (BLM) records each memory's past uses and effects, learning when its owner role should apply or avoid it based on task context and incoming messages. Together, these components help teams correct flawed experience while retaining useful rules that were applied incorrectly. Experiments with Qwen3-4B-Instruct-2507 on four benchmarks show that DiscernMem achieves the highest average score on AutoGen, CAMEL, and MacNet, exceeding the strongest reported baselines by 0.51-4.32 points. It leads on code generation and symbolic planning across all three systems, including a PDDL score of 37.71 versus 28.48 on CAMEL.",
+"published": "2026-10-27",
+"authors": [
+"Yipeng Hao",
+"Yuxuan Cai",
+"Wenkai Ji",
+"Jie Zhou",
+"Liyang Yu",
+"Qin Chen",
+"Zhiguo Yan",
+"Shulei Zheng",
+"Liang He"
+],
+"cats": [
+"cs.AI",
+"cs.MA"
+],
+"primary": "cs.AI",
+"relevance": 0.886,
+"matched": [],
+"added": "2026-10-29"
+},
+{
+"id": "2610.36484",
+"url": "http://arxiv.org/abs/2610.36484v1",
+"title": "CogArena: Benchmarking Multimodal Agents on Interactive Behavioral Experiments",
+"abstract": "Claims about the cognitive capabilities of large language models are typically tested by translating behavioral paradigms into text prompts, bypassing the visual interfaces and time pressure through which human participants actually engage with experiments. At the same time, AI agents can now complete online behavioral tasks and produce human-like data, which raises concerns that online datasets in the social and behavioral sciences are increasingly open to contamination. We introduce CogArena, a benchmark of ten experimental paradigms from the social and behavioral sciences. Agents complete the experiments through a standard web browser, working with the same visual stimuli and response interfaces that online participants use. A three-level scoring procedure evaluates whether the agent completed the task, how accurately it performed, and whether its data show the behavioral signatures each paradigm reliably produces in people. Across four multimodal models, each run ten times per task, we find that finishing an experiment and reproducing its signatures are different things. Many sessions did not finish, and those that did reproduced some signatures reliably and others not at all. CogArena provides the tasks, scoring code, and a public leaderboard for new submissions.",
+"published": "2026-10-27",
+"authors": [
+"Kianté Fernandez",
+"Caitlin Chen",
+"Jialu Zhou",
+"Bartek Sadowski",
+"Anthony C. Miceli",
+"Ian Krajbich"
+],
+"cats": [
+"cs.AI",
+"cs.CY",
+"cs.HC",
+"q-bio.NC"
+],
+"primary": "cs.AI",
+"relevance": 0.875,
+"matched": [],
+"added": "2026-10-29"
+},
+{
+"id": "2610.34991",
+"url": "http://arxiv.org/abs/2610.34991v2",
+"title": "Diagnosing and Mitigating Long-Session Degradation in Full-Duplex Speech Models",
+"abstract": "End-to-end full-duplex spoken dialogue models enable natural, real-time spoken interactions with interruptions, backchannels, and overlapping speech. Prior evaluations have assessed diverse interaction capabilities and identified some degradation patterns across conversational turns. However, how model behavior evolves over extended sessions remains insufficiently understood. In this work, we address this gap by systematically characterizing long-session degradation and developing efficient methods to mitigate it. We introduce a closed-loop evaluation framework for long-session stability and apply it to several publicly available full-duplex speech models, revealing degradation over time in responsiveness, spoken content quality, and voice consistency. To mitigate this degradation, we propose a self-distillation-based training framework for lightweight LoRA adaptation that improves long-session stability with a small amount of additional training. We further introduce a two-resolution context (TRC) architecture that preserves recent interactions in full detail while compressing older interaction history into key-value representations. We evaluate our methods on three models with distinct architectures, assessing long-session stability, information retention, and computational efficiency. Across all three models, we show that LoRA adaptation mitigates performance degradation over ten-minute sessions, while adding TRC extends these gains beyond the training session length and reduces KV-cache growth by more than 90%.",
+"published": "2026-10-26",
+"authors": [
+"Junho Kim",
+"CheHyun Lee",
+"Donghun Kang",
+"Youngho Cho",
+"Dongwook Lee",
+"Heeseung Kim",
+"Sungroh Yoon"
+],
+"cats": [
+"cs.CL"
+],
+"primary": "cs.CL",
+"relevance": 0.871,
+"matched": [],
+"added": "2026-10-29"
+},
+{
+"id": "2610.34977",
+"url": "http://arxiv.org/abs/2610.34977v1",
+"title": "Adaptive Memory Index Evolution for Agents",
+"abstract": "Long-horizon agents continually accumulate experience, yet retaining a memory does not guarantee access when it is needed. Existing systems can adapt both memory content and access; we isolate persistent access updates as a separately controlled adaptation layer. We formulate this target as Memory Index Evolution and instantiate it with Adaptive Memory Index Evolution (AMIE), a lightweight plug-in layer that evolves per-memory access state from deployment retrievals without modifying stored content or retraining the host memory system. AMIE distils a semantic teacher's keep/suppress judgments into a retrieval-conditioned policy and accumulates its selective actions into bounded state that reweights subsequent host retrievals. Surprisingly, even a zero-call policy that simply accumulates retrieval frequency can match or outperform semantic policies in several settings, revealing retrieval traffic itself as a strong signal for access adaptation, while learned selectivity improves robustness when frequently retrieved memories remain useful. Across five retrieval-based hosts and three benchmarks, trained AMIE improves downstream F1 or accuracy in all 15 comparisons, by 0.70--3.37 percentage points (up to 25% relative), and improves retrieval in all 10 comparisons. Controlled analyses show that persistent competitor suppression can expose previously unseen evidence, while suppressing repeatedly useful memories creates the complementary failure mode. Together, these results establish persistent memory access as a practical adaptation layer, distinct from the content it serves, in retrieval-based agent memory systems.",
+"published": "2026-10-26",
+"authors": [
+"Yuntong Hu",
+"Tongli Su",
+"Yuanfu Sun",
+"Shuo Ma",
+"Qiaoyu Tan",
+"Liang Zhao"
+],
+"cats": [
+"cs.LG"
+],
+"primary": "cs.LG",
+"relevance": 0.88,
+"matched": [],
+"added": "2026-10-29"
+},
+{
+"id": "2610.34790",
+"url": "http://arxiv.org/abs/2610.34790v1",
+"title": "BehaviorMem: Building and Evaluating User Memory from Real-World E-Commerce Behavior Streams",
+"abstract": "User memory helps personalized systems build on their understanding of users over time. In e-commerce, users convey their preferences and needs through both explicit language and implicit interactions with products. We study memory built from logs of these interactions, examining how it can \\emph{remember} concrete evidence and established interests, and use that evidence to \\emph{infer} underlying needs and preferences that inform judgments beyond well-observed product domains. Existing memory methods primarily target language-based interactions, and evaluations offer limited real behavioral data and limited separation of these capabilities. This leaves open how to jointly support and separately evaluate remembering and inference from behavioral logs. We formulate the problem of continual behavioral user memory around these joint requirements and develop a dedicated evaluation framework and memory method to address them. \\textbf{BehaviorMemBench} is a benchmark built from real e-commerce logs covering 1{,}194 users and 17{,}462 behavioral batches over more than three years, with automatic future-behavior labels and a task-independent memory interface to separately evaluate remembering and inference under a common protocol. \\textbf{BehaviorMem} is a memory design that organizes explicit behavioral facts and inferred user characteristics across long-term and short-term scopes in a two-axis state, with evidence-grounded formation, continual maintenance, and query-independent readout. Experiments across two builders and two task readers show that BehaviorMem leads the evaluated agentic memories on remember and infer, and reveal different method rankings across the two capabilities and competitive statistical baselines. Validation on a public dataset further supports its usefulness for downstream tasks based on behavioral histories.",
+"published": "2026-10-26",
+"authors": [
+"Sizhe Wang",
+"Xinghao Fang",
+"Rui Qiu",
+"Zhenjia Ma",
+"Dagui Chen",
+"Kun Kuang",
+"Hongcheng Guo"
+],
+"cats": [
+"cs.CL"
+],
+"primary": "cs.CL",
+"relevance": 0.853,
+"matched": [
+"persona + memory"
+],
+"added": "2026-10-29"
 }
 ]
