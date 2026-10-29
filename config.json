@@ -1,0 +1,11 @@
+{
+  "categories": ["cs.CL", "cs.LG", "cs.AI"],
+  "keywords": [
+    ["persona", "memory"],
+    ["persona", "consistency"],
+    ["memory", "language model"],
+    ["memory", "agent"]
+  ],
+  "lookback_days": 3,
+  "max_results": 200
+}
