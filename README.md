@@ -29,6 +29,16 @@ Relevance is the highest cosine similarity between a paper's embedding and any a
 - 수동 / Manual: Actions → arXiv tracker → Run workflow (`days`로 과거 기간 백필 / backfill with `days`)
 - 로컬 / Local: `pip install -r requirements.txt && python tracker.py [days] && python graph.py`
 
+## Anchor 논문 / Anchor papers
+Anchor 논문은 에이전트 메모리, 장기 대화 메모리, 페르소나 대화 분야의 대표 선행 연구로, `config.json`의 `anchors`에 직접 지정합니다. 두 가지 역할을 합니다.
+Anchor papers are well-known prior work on agent memory, long-term conversational memory, and persona dialogue, listed by hand under `anchors` in `config.json`. They serve two purposes:
+
+1. **기준점 / Orientation**: 기간 설정과 관계없이 그래프에 항상 표시되어(마름모), 새 논문이 어느 연구 계열 가까이에 있는지 보여 줍니다. / Always shown on the graph (diamonds), regardless of the time window, so you can see which line of work a new paper sits next to.
+2. **관련성 기준 / Relevance scoring**: 논문의 관련성은 anchor 논문들과의 임베딩 유사도 최댓값입니다. 수집 단계에서 주제와 무관한 논문을 거르고, 키워드는 없지만 관련 있는 논문을 찾는 데 쓰입니다. / A paper's relevance is its highest embedding similarity to any anchor. Collection uses it to drop off-topic papers and to pick up related papers that miss the keywords.
+
+현재 anchor: MemGPT, Generative Agents, MemoryBank, A-MEM, Mem0, LoCoMo, LongMemEval, PersonaChat, MSC (Beyond Goldfish Memory). ID를 추가하면 다음 실행 때 반영되며, 관련성 기준도 함께 바뀝니다.
+Current anchors are listed above. Adding an ID takes effect on the next run and also shifts what counts as relevant.
+
 ## 논문 그래프 / Paper graph
 `graph.py`가 GitHub Actions에서 제목+abstract 임베딩(`BAAI/bge-small-en-v1.5`, CPU)을 계산하고, 코사인 유사도 상위 k개 이웃, k-means 주제 클러스터, 벤치마크 태그를 `docs/graph.json`에 저장합니다. 임베딩은 `data/embeddings/<YYMM>.npz`(arXiv ID 월별, float16)에 캐시되어 새 논문만 계산하고, 매일 바뀌는 파일은 이번 달 것 하나뿐입니다.
 On GitHub Actions, `graph.py` embeds each title+abstract (`BAAI/bge-small-en-v1.5`, CPU) and writes top-k cosine neighbors, k-means topic clusters, and benchmark tags to `docs/graph.json`. Embeddings are cached per arXiv month in `data/embeddings/<YYMM>.npz` (float16), so only new papers are embedded and only the current month's file changes each day.
