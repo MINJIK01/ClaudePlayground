@@ -36,7 +36,7 @@ def matched(p, cfg):
 def to_md(p, cfg):
     authors = ", ".join(p["authors"][:5]) + (" et al." if len(p["authors"]) > 5 else "")
     return (f"### [{p['title']}]({p['url']})\n"
-            f"- {authors}\n- {p['published']} · {', '.join(p['cats'])} · 매칭: {', '.join(matched(p, cfg))}\n\n"
+            f"- {authors}\n- {p['published']} · {', '.join(p['cats'])} · Matched: {', '.join(matched(p, cfg))}\n\n"
             f"<details><summary>Abstract</summary>\n\n{p['abstract']}\n</details>\n")
 
 
