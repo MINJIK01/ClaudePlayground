@@ -1,11 +1,10 @@
-"""docs/papers.json → docs/graph.json: 임베딩 kNN 이웃, k-means 클러스터(+TF-IDF 라벨), 벤치마크 태그, 고정 레이아웃 좌표."""
+"""docs/papers.json → docs/graph.json: 임베딩 kNN 이웃, k-means 클러스터(+TF-IDF 라벨), 벤치마크 태그."""
 import json, math, re, pathlib, collections
 import numpy as np
 
 ROOT = pathlib.Path(__file__).parent
 CACHE = ROOT / "data" / "embeddings.npz"
 CENTROIDS = ROOT / "data" / "centroids.npy"
-GRAPH = ROOT / "docs" / "graph.json"
 STOP = set("""a an the and or of to in on for with by from as at is are was were be been this that these those we our
 it its can which via into than not but also such their they has have more both while how what when where using
 based use new show shows propose proposed approach method methods paper results model models task tasks
@@ -72,35 +71,6 @@ def kmeans(X, k, C0=None, iters=100):
     return (X @ C.T).argmax(1), C
 
 
-def layout(X, edges, prev, iters=300):
-    """Fruchterman-Reingold 배치. prev(이전 좌표)가 있는 논문은 그 위치에서 시작해 조금만 움직임."""
-    n, rng = len(X), np.random.default_rng(0)
-    I, J = np.array([e[0] for e in edges], int), np.array([e[1] for e in edges], int)
-    P = rng.uniform(-0.5, 0.5, (n, 2))
-    known = np.array([i in prev for i in range(n)])
-    for i in range(n):
-        if known[i]:
-            P[i] = prev[i]
-    for i in np.where(~known)[0]:  # 새 논문은 이미 배치된 가장 유사한 논문 근처에서 시작
-        sims = X[known] @ X[i]
-        if len(sims):
-            P[i] = P[known][sims.argmax()] + rng.normal(0, 0.02, 2)
-    k, t = 1 / math.sqrt(n), (0.02 if known.mean() > 0.5 else 0.1)
-    for _ in range(iters):
-        D = P[:, None] - P[None]
-        disp = (D * (k * k / ((D ** 2).sum(-1) + 1e-6))[..., None]).sum(1)
-        delta = P[I] - P[J]
-        f = delta * np.linalg.norm(delta, axis=1, keepdims=True) / k
-        np.add.at(disp, I, -f)
-        np.add.at(disp, J, f)
-        disp -= P * n * k  # 중심으로 당기는 힘 (연결 안 된 노드가 멀리 흩어지지 않게)
-        step = np.linalg.norm(disp, axis=1, keepdims=True) + 1e-9
-        P += disp / step * np.minimum(step, t)
-        P -= P.mean(0)
-        t *= 0.99
-    return P
-
-
 def cluster_labels(texts, lab, k, n=3):
     vecs = tfidf(texts)
     total = collections.Counter()
@@ -137,19 +107,14 @@ def main():
     lab, C = kmeans(X, k, np.load(CENTROIDS) if CENTROIDS.exists() else None)
     np.save(CENTROIDS, C)
 
-    old = json.loads(GRAPH.read_text()).get("pos", {}) if GRAPH.exists() else {}
-    prev = {i: np.array(old[pid]) / 1000 for i, pid in enumerate(ids) if pid in old}
-    P = layout(X, [(i, j) for i in range(len(ids)) for j in top[i][:3]], prev)
-
     pats = {name: re.compile("|".join(rf"(?<![A-Za-z]){re.escape(a)}(?![A-Za-z])" for a in aliases))
             for name, aliases in cfg["benchmarks"].items()}
     benchmarks = {p["id"]: b for p, t in zip(papers, texts) if (b := [n for n, r in pats.items() if r.search(t)])}
 
     out = {"neighbors": neighbors, "cluster": {i: int(l) for i, l in zip(ids, lab)},
-           "clusters": cluster_labels(texts, lab, k), "benchmarks": benchmarks,
-           "pos": {i: [round(float(x) * 1000), round(float(y) * 1000)] for i, (x, y) in zip(ids, P)}}
-    GRAPH.write_text(json.dumps(out))
-    print(f"nodes={len(papers)} clusters={k} benchmark_tagged={len(benchmarks)} placed_before={len(prev)}")
+           "clusters": cluster_labels(texts, lab, k), "benchmarks": benchmarks}
+    (ROOT / "docs" / "graph.json").write_text(json.dumps(out))
+    print(f"nodes={len(papers)} clusters={k} benchmark_tagged={len(benchmarks)}")
 
 
 if __name__ == "__main__":

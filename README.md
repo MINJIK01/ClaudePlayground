@@ -36,8 +36,8 @@ On GitHub Actions, `graph.py` embeds each title+abstract (`BAAI/bge-small-en-v1.
 - 벤치마크 칩으로 해당 벤치마크를 언급한 논문 강조 / Benchmark chips highlight papers that mention them
 - 마름모 노드는 anchor(기준) 논문 / Diamond nodes are anchor papers
 - 논문당 연결 수 1–5, 키워드 그룹 표시·숨김 / 1–5 links per paper; toggle keyword groups
-- 최근 7일 추가 논문은 테두리 표시, 개요 패널에 New this week 목록 / Papers added in the last 7 days are outlined and listed under New this week
-- 배치·클러스터 번호는 이전 실행 결과에서 이어서 계산해 매일 크게 바뀌지 않음 / Layout and cluster numbering continue from the previous run, so they stay stable day to day
+- 최근 7일 추가 논문은 빨간 테두리 표시, 개요 패널에 New this week 목록 / Papers added in the last 7 days are outlined in red and listed under New this week
+- 클러스터 번호는 이전 실행 결과에서 이어서 계산해 매일 크게 바뀌지 않음 / Cluster numbering continues from the previous run, so it stays stable day to day
 - 노드 클릭 시 abstract, 주제, 태그, 유사 논문 목록 / Select a node to see its abstract, topic, tags, and most similar papers
 - 개요 패널의 주간 키워드별 논문 수 차트(표 보기 포함) / Weekly papers-per-keyword chart (with a table view) in the overview panel
 - GitHub Pages 설정 / Pages setup: Settings → Pages → Branch `main` / `/docs`

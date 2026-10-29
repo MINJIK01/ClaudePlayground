@@ -12,20 +12,20 @@
   /* Layout: toolbar on top, graph canvas left, reading panel right (stacks below on phones). */
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --fg: #17202c; --muted: #5d6878; --line: #dfe3ea;
-    --edge: #c3c9d3; --accent: #2f5bd3; --accent-soft: #e6ecfb; --anchor: #17202c;
+    --edge: #c3c9d3; --accent: #2f5bd3; --accent-soft: #e6ecfb; --anchor: #17202c; --new: #d92d20;
     --k1: #2a78d6; --k2: #eb6834; --k3: #1baf7a; --k4: #eda100; --k5: #e87ba4; --k6: #008300; --k7: #6250d6; --k8: #e34948;
     --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
     --bg: #0f141b; --panel: #151b24; --fg: #e3e8ef; --muted: #8c97a7; --line: #262f3b;
-    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840; --anchor: #e3e8ef;
+    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840; --anchor: #e3e8ef; --new: #ff5c4d;
     --k1: #3987e5; --k2: #d95926; --k3: #199e70; --k4: #c98500; --k5: #d55181; --k6: #008300; --k7: #9085e9; --k8: #e66767;
     color-scheme: dark;
   } }
   :root[data-theme="dark"] {
     --bg: #0f141b; --panel: #151b24; --fg: #e3e8ef; --muted: #8c97a7; --line: #262f3b;
-    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840; --anchor: #e3e8ef;
+    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840; --anchor: #e3e8ef; --new: #ff5c4d;
     --k1: #3987e5; --k2: #d95926; --k3: #199e70; --k4: #c98500; --k5: #d55181; --k6: #008300; --k7: #9085e9; --k8: #e66767;
     color-scheme: dark;
   }
@@ -155,7 +155,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
   const net = new vis.Network($("net"), {nodes, edges: links}, {
     nodes: {shape: "dot", borderWidth: 0, font: {face: "IBM Plex Sans", size: 11}, scaling: {min: 6, max: 22}},
     edges: {smooth: false, scaling: {min: 1, max: 4}},
-    physics: false,
+    physics: {solver: "forceAtlas2Based", forceAtlas2Based: {gravitationalConstant: -60}, stabilization: {iterations: 250}},
     interaction: {hover: true, tooltipDelay: 150},
   });
 
@@ -174,9 +174,9 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
     const fg = css("--fg"), muted = css("--muted"), accent = css("--accent"), edge = css("--edge");
     nodes.update(papers.map(p => ({
       id: p.id, value: 1 + (deg[p.id] || 0), title: p.title, shape: p.anchor ? "diamond" : "dot",
-      x: G.pos[p.id][0], y: G.pos[p.id][1], borderWidth: isNew(p) ? 3 : 0,
+      borderWidth: isNew(p) ? 1.5 : 0,
       label: p.title.length > 30 ? p.title.slice(0, 30) + "…" : p.title,
-      color: {background: color(group(p)), border: fg, highlight: {background: accent, border: accent}},
+      color: {background: color(group(p)), border: css("--new"), highlight: {background: accent, border: accent}},
       font: {color: p.id === state.sel || (p.anchor && lit(p)) ? fg : muted}, opacity: lit(p) ? 1 : 0.12,
     })));
     links.clear();
@@ -233,7 +233,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
         <li>Select a paper to read its abstract and see its closest papers.</li>
         <li>Switch <b>Color by</b> to see topic clusters, labeled by their most distinctive terms.</li>
         <li>Select a benchmark to highlight papers that mention it.</li>
-        <li>Diamonds are anchor papers: well-known prior work for orientation. Outlined nodes were added in the last 7 days.</li>
+        <li>Diamonds are anchor papers: well-known prior work for orientation. Nodes outlined in red were added in the last 7 days.</li>
       </ol>
       <h3>New this week (${fresh.length})</h3>` +
       (fresh.length ? fresh.slice(0, 10).map(p => `<button type="button" class="rel" data-id="${p.id}"><span class="s">${(p.relevance || 0).toFixed(2)}</span><span class="t">${esc(p.title)}</span></button>`).join("")
@@ -292,7 +292,6 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { legend(); state.sel ? show(state.sel) : overview(); });
   legend();
   overview();
-  net.fit();
 }).catch(err => {
   $("info").innerHTML = `<p class="eyebrow">Could not show the graph</p><p>The site may be in the middle of an update. Reload this page in a minute.</p><p class="meta mono">${esc(err.message)}</p>`;
 });
