@@ -3,7 +3,7 @@ import json, sys, datetime as dt, pathlib, urllib.parse, urllib.request
 import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).parent
-NS = {"a": "http://www.w3.org/2005/Atom"}
+NS = {"a": "http://www.w3.org/2005/Atom", "x": "http://arxiv.org/schemas/atom"}
 API = "https://export.arxiv.org/api/query?"
 
 
@@ -24,6 +24,7 @@ def parse(xml):
             "published": text("published")[:10],
             "authors": [a.findtext("a:name", "", NS) for a in e.findall("a:author", NS)],
             "cats": [c.get("term") for c in e.findall("a:category", NS)],
+            "primary": e.find("x:primary_category", NS).get("term"),
         }
 
 
@@ -51,7 +52,8 @@ def main():
         papers = list(parse(r.read()))
 
     cutoff = (dt.date.today() - dt.timedelta(days=days)).isoformat()
-    new = [p for p in papers if p["published"] >= cutoff and p["id"] not in seen and matched(p, cfg)]
+    new = [p for p in papers if p["published"] >= cutoff and p["id"] not in seen
+           and p["primary"] in cfg["categories"] and matched(p, cfg)]
     print(f"fetched={len(papers)} new={len(new)}")
     if not new:
         return
