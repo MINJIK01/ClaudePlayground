@@ -1,16 +1,11 @@
 """arXiv 신규 논문 수집 → papers/YYYY-MM-DD.md, docs/papers.json(누적) 갱신. 사용법: python tracker.py [lookback_days]"""
-import json, sys, datetime as dt, pathlib, urllib.parse, urllib.request
+import json, sys, time, datetime as dt, pathlib, urllib.parse, urllib.request
 import xml.etree.ElementTree as ET
+from graph import load_cache, save_cache, vectors
 
 ROOT = pathlib.Path(__file__).parent
 NS = {"a": "http://www.w3.org/2005/Atom", "x": "http://arxiv.org/schemas/atom"}
 API = "https://export.arxiv.org/api/query?"
-
-
-def build_query(cfg):
-    cats = " OR ".join(f"cat:{c}" for c in cfg["categories"])
-    kws = " OR ".join("(" + " AND ".join(f'abs:"{w}"' for w in k) + ")" for k in cfg["keywords"])
-    return f"({cats}) AND ({kws})"
 
 
 def parse(xml):
@@ -33,49 +28,88 @@ def matched(p, cfg):
     return [" + ".join(k) for k in cfg["keywords"] if all(w in hay for w in k)]
 
 
-def to_md(p, cfg):
+def to_md(p):
     authors = ", ".join(p["authors"][:5]) + (" et al." if len(p["authors"]) > 5 else "")
+    how = ", ".join(p["matched"]) or "semantic"
     return (f"### [{p['title']}]({p['url']})\n"
-            f"- {authors}\n- {p['published']} · {', '.join(p['cats'])} · Matched: {', '.join(matched(p, cfg))}\n\n"
+            f"- {authors}\n- {p['published']} · {', '.join(p['cats'])} · Matched: {how} · Relevance: {p['relevance']:.2f}\n\n"
             f"<details><summary>Abstract</summary>\n\n{p['abstract']}\n</details>\n")
 
 
 def fetch(params):
-    with urllib.request.urlopen(API + urllib.parse.urlencode(params), timeout=60) as r:
+    with urllib.request.urlopen(API + urllib.parse.urlencode(params), timeout=120) as r:
         return list(parse(r.read()))
+
+
+def fetch_recent(cfg, cutoff):
+    """카테고리 전체 신규 논문을 제출일 역순으로 페이지 단위 조회 (cutoff 이전에 도달하면 중단)."""
+    query = " OR ".join(f"cat:{c}" for c in cfg["categories"])
+    out, start, size = [], 0, cfg["page_size"]
+    while True:
+        params = {"search_query": query, "sortBy": "submittedDate", "sortOrder": "descending",
+                  "start": start, "max_results": size}
+        page = fetch(params)
+        if not page:  # arXiv API가 간헐적으로 빈 페이지를 반환하므로 1회 재시도
+            time.sleep(5)
+            page = fetch(params)
+        out += page
+        if len(page) < size or page[-1]["published"] < cutoff:
+            return out
+        start += size
+        time.sleep(3)  # arXiv API 호출 간격 권장
 
 
 def main():
     cfg = json.loads((ROOT / "config.json").read_text())
     days = int(sys.argv[1]) if len(sys.argv) > 1 else cfg["lookback_days"]
+    today, rel_cfg = dt.date.today().isoformat(), cfg["relevance"]
     db_path = ROOT / "docs" / "papers.json"
     db = json.loads(db_path.read_text()) if db_path.exists() else []
     seen = {p["id"] for p in db}
-
-    params = {"search_query": build_query(cfg), "sortBy": "submittedDate",
-              "sortOrder": "descending", "max_results": cfg["max_results"]}
-    papers = fetch(params)
-
-    cutoff = (dt.date.today() - dt.timedelta(days=days)).isoformat()
-    new = [p for p in papers if p["published"] >= cutoff and p["id"] not in seen
-           and p["primary"] in cfg["categories"] and matched(p, cfg)]
-    print(f"fetched={len(papers)} new={len(new)}")
 
     # anchor: 키워드·기간 필터 없이 config에 지정한 기준 논문을 1회만 추가
     todo = [a for a in cfg["anchors"] if a not in seen]
     anchors = fetch({"id_list": ",".join(todo), "max_results": len(todo)}) if todo else []
     for p in anchors:
-        p["anchor"] = True
-    for p in new + anchors:
-        p["matched"] = matched(p, cfg)
+        p.update(anchor=True, added=today, matched=matched(p, cfg))
+    db += anchors
+
+    cutoff = (dt.date.today() - dt.timedelta(days=days)).isoformat()
+    cands = {p["id"]: p for p in fetch_recent(cfg, cutoff)
+             if p["published"] >= cutoff and p["id"] not in seen and p["primary"] in cfg["categories"]}
+    cands = list(cands.values())
+
+    # 관련성 = anchor 논문 중 가장 가까운 것과의 코사인 유사도
+    cache = load_cache()
+    A = vectors([p for p in db if p.get("anchor")], cfg["embedding_model"], cache)
+    rel = lambda ps: (vectors(ps, cfg["embedding_model"], cache) @ A.T).max(1) if ps and len(A) else [1.0] * len(ps)
+    for p, r in zip(cands, rel(cands)):
+        p.update(relevance=round(float(r), 3), matched=matched(p, cfg), added=today)
+    keep = lambda p: (p["matched"] and p["relevance"] >= rel_cfg["min"]) or p["relevance"] >= rel_cfg["recall"]
+    new = [p for p in cands if keep(p)]
+
+    # 기존 논문도 같은 기준으로 재평가해 min 미만(노이즈)은 제거
+    old = [p for p in db if not p.get("anchor")]
+    for p, r in zip(old, rel(old)):
+        p["relevance"] = round(float(r), 3)
+    dropped = [p for p in old if p["relevance"] < rel_cfg["min"]]
+    db = [p for p in db if p not in dropped] + new
+
+    print(f"candidates={len(cands)} keyword={sum(bool(p['matched']) for p in cands)} "
+          f"new={len(new)} semantic_only={sum(not p['matched'] for p in new)} dropped={len(dropped)}")
+    for p in sorted((p for p in cands if not p["matched"]), key=lambda p: -p["relevance"])[:15]:
+        print(f"  [no-keyword] {p['relevance']:.3f} {'KEEP' if keep(p) else 'skip'} {p['title'][:90]}")
+    for p in dropped:
+        print(f"  [dropped] {p['relevance']:.3f} {p['title'][:90]}")
+
+    save_cache({p["id"]: cache[p["id"]] for p in db if p["id"] in cache})
     if new:
-        out = ROOT / "papers" / f"{dt.date.today()}.md"
+        out = ROOT / "papers" / f"{today}.md"
         out.parent.mkdir(exist_ok=True)
-        head = "" if out.exists() else f"# {dt.date.today()}\n\n"
+        head = "" if out.exists() else f"# {today}\n\n"
         with out.open("a") as f:
-            f.write(head + "\n".join(to_md(p, cfg) for p in new))
-    if new or anchors:
-        db_path.write_text(json.dumps(db + new + anchors, ensure_ascii=False, indent=0))
+            f.write(head + "\n".join(to_md(p) for p in new))
+    db_path.write_text(json.dumps(db, ensure_ascii=False, indent=0))
 
 
 if __name__ == "__main__":

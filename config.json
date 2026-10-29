@@ -9,7 +9,8 @@
     ["memory-augmented"]
   ],
   "lookback_days": 3,
-  "max_results": 200,
+  "page_size": 500,
+  "relevance": {"min": 0.72, "recall": 0.87},
   "graph_top_k": 5,
   "benchmarks": {
     "LoCoMo": ["LoCoMo"],

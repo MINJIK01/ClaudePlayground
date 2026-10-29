@@ -126,18 +126,22 @@ const monday = d => { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUT
 Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"}).then(r => r.json()))).then(([papers, G]) => {
   const byId = Object.fromEntries(papers.map(p => [p.id, p]));
   const tracked = papers.filter(p => !p.anchor);
-  const kws = [...new Set(tracked.map(p => p.matched[0]))];
+  const kwOf = p => p.matched[0] || "semantic match";
+  const kws = [...new Set(tracked.map(kwOf))];
+  const today = new Date().toISOString().slice(0, 10), weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  const isNew = p => !p.anchor && (p.added || p.published) >= weekAgo;
+  const fresh = tracked.filter(isNew).sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
   const benches = Object.entries(Object.values(G.benchmarks).flat().reduce((m, b) => (m[b] = (m[b] || 0) + 1, m), {})).sort((a, b) => b[1] - a[1]);
   const clusterName = c => G.clusters[c].join(", ");
-  const group = p => state.mode === "cl" ? G.cluster[p.id] : p.anchor ? "anchor" : p.matched[0];
+  const group = p => state.mode === "cl" ? G.cluster[p.id] : p.anchor ? "anchor" : kwOf(p);
   const groups = () => state.mode === "kw" ? kws : G.clusters.map((_, c) => c);
   const color = g => g === "anchor" ? css("--anchor") : css(`--k${groups().indexOf(g) % 8 + 1}`);
   const kwColor = k => css(`--k${kws.indexOf(k) % 8 + 1}`);
-  const state = {k: 2, q: "", mode: "kw", off: new Set(), bench: null, sel: null};
+  const state = {k: 2, q: "", mode: "kw", off: new Set(), bench: null, sel: null, fresh: false};
   const latest = tracked.reduce((m, p) => p.published > m ? p.published : m, "");
 
   $("k").innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" data-k="${n}">${n}</button>`).join("");
-  $("bench").innerHTML = benches.length ? "<b>Benchmarks</b>" + benches.map(([b, n]) => `<button type="button" class="chip" data-bench="${esc(b)}">${esc(b)}<span>${n}</span></button>`).join("") : "";
+  $("bench").innerHTML = `<b>Filter</b><button type="button" class="chip" id="fresh">New this week<span>${fresh.length}</span></button>` + benches.map(([b, n]) => `<button type="button" class="chip" data-bench="${esc(b)}">${esc(b)}<span>${n}</span></button>`).join("");
 
   function legend() {
     const count = g => papers.filter(p => group(p) === g).length;
@@ -151,7 +155,7 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
   const net = new vis.Network($("net"), {nodes, edges: links}, {
     nodes: {shape: "dot", borderWidth: 0, font: {face: "IBM Plex Sans", size: 11}, scaling: {min: 6, max: 22}},
     edges: {smooth: false, scaling: {min: 1, max: 4}},
-    physics: {solver: "forceAtlas2Based", forceAtlas2Based: {gravitationalConstant: -60}, stabilization: {iterations: 250}},
+    physics: false,
     interaction: {hover: true, tooltipDelay: 150},
   });
 
@@ -166,12 +170,13 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
       if (b === state.sel) near.add(a);
     });
     const lit = p => !state.off.has(String(group(p))) && (!state.q || p.title.toLowerCase().includes(state.q))
-      && (!state.bench || (G.benchmarks[p.id] || []).includes(state.bench)) && (!state.sel || near.has(p.id));
+      && (!state.bench || (G.benchmarks[p.id] || []).includes(state.bench)) && (!state.fresh || isNew(p)) && (!state.sel || near.has(p.id));
     const fg = css("--fg"), muted = css("--muted"), accent = css("--accent"), edge = css("--edge");
     nodes.update(papers.map(p => ({
       id: p.id, value: 1 + (deg[p.id] || 0), title: p.title, shape: p.anchor ? "diamond" : "dot",
+      x: G.pos[p.id][0], y: G.pos[p.id][1], borderWidth: isNew(p) ? 3 : 0,
       label: p.title.length > 30 ? p.title.slice(0, 30) + "…" : p.title,
-      color: {background: color(group(p)), highlight: {background: accent, border: accent}},
+      color: {background: color(group(p)), border: fg, highlight: {background: accent, border: accent}},
       font: {color: p.id === state.sel || (p.anchor && lit(p)) ? fg : muted}, opacity: lit(p) ? 1 : 0.12,
     })));
     links.clear();
@@ -187,12 +192,12 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
       c.setAttribute("aria-pressed", !state.off.has(c.dataset.g));
       c.querySelector("i").style.background = color(c.dataset.g === "anchor" || state.mode === "kw" ? c.dataset.g : +c.dataset.g);
     });
-    document.querySelectorAll("#bench .chip").forEach(c => c.setAttribute("aria-pressed", c.dataset.bench === state.bench));
+    document.querySelectorAll("#bench .chip").forEach(c => c.setAttribute("aria-pressed", c.id === "fresh" ? state.fresh : c.dataset.bench === state.bench));
   }
 
   function trend() {
     const weeks = [...new Set(tracked.map(p => monday(p.published)))].sort();
-    const counts = weeks.map(w => kws.map(k => tracked.filter(p => monday(p.published) === w && p.matched[0] === k).length));
+    const counts = weeks.map(w => kws.map(k => tracked.filter(p => monday(p.published) === w && kwOf(p) === k).length));
     const max = Math.max(1, ...counts.map(c => c.reduce((a, b) => a + b, 0)));
     const W = 360, H = 150, T = 10, L = 24, B = 18, bw = Math.min(36, (W - L) / weeks.length - 6);
     const x = i => L + (i + 0.5) * (W - L) / weeks.length - bw / 2, y = v => T + (H - B - T) * (1 - v / max);
@@ -223,13 +228,17 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
     $("info").innerHTML = `
       <p class="eyebrow">About this graph</p>
       <h2>Recent arXiv papers on persona and memory, linked by semantic similarity</h2>
-      <p>Papers are collected every weekday from cs.CL, cs.LG and cs.AI when their title or abstract contains a tracked keyword. Each paper is linked to the papers whose title and abstract embeddings (bge-small-en-v1.5) are closest by cosine similarity.</p>
+      <p>Papers are collected every weekday from cs.CL, cs.LG and cs.AI. A paper is kept when it contains a tracked keyword and is close enough to the anchor papers, or when it is very close to them without the keyword (semantic match). Each paper is linked to the papers whose title and abstract embeddings (bge-small-en-v1.5) are closest by cosine similarity.</p>
       <ol class="how">
         <li>Select a paper to read its abstract and see its closest papers.</li>
         <li>Switch <b>Color by</b> to see topic clusters, labeled by their most distinctive terms.</li>
         <li>Select a benchmark to highlight papers that mention it.</li>
-        <li>Diamonds are anchor papers: well-known prior work for orientation.</li>
-      </ol>` + trend();
+        <li>Diamonds are anchor papers: well-known prior work for orientation. Outlined nodes were added in the last 7 days.</li>
+      </ol>
+      <h3>New this week (${fresh.length})</h3>` +
+      (fresh.length ? fresh.slice(0, 10).map(p => `<button type="button" class="rel" data-id="${p.id}"><span class="s">${(p.relevance || 0).toFixed(2)}</span><span class="t">${esc(p.title)}</span></button>`).join("")
+        + (fresh.length > 10 ? `<p class="meta">${fresh.length - 10} more: use the New this week filter.</p>` : "")
+        : '<p class="meta">No papers were added in the last 7 days.</p>') + trend();
     $("info").scrollTop = 0;
     render();
   }
@@ -237,10 +246,10 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
   function show(id) {
     const p = byId[id], rel = G.neighbors[id], top = rel.length ? rel[0][1] : 1;
     state.sel = id;
-    const tags = [...p.matched.map(k => `<span class="kw">${esc(k)}</span>`), ...(G.benchmarks[id] || []).map(b => `<span class="kw bm">${esc(b)}</span>`)];
+    const tags = [...(p.matched.length || p.anchor ? p.matched : ["semantic match"]).map(k => `<span class="kw">${esc(k)}</span>`), ...(G.benchmarks[id] || []).map(b => `<span class="kw bm">${esc(b)}</span>`)];
     $("info").innerHTML = `
       <button type="button" class="back" id="back">← Overview</button>
-      <p class="eyebrow mono">${p.anchor ? "Anchor paper · " : ""}arXiv ${esc(p.id)} · ${esc(p.primary)} · ${esc(p.published)}</p>
+      <p class="eyebrow mono">${p.anchor ? "Anchor paper · " : `Relevance ${(p.relevance || 0).toFixed(2)} · `}arXiv ${esc(p.id)} · ${esc(p.primary)} · ${esc(p.published)}</p>
       <h2>${esc(p.title)}</h2>
       <div class="meta">${esc(p.authors.slice(0, 6).join(", "))}${p.authors.length > 6 ? " et al." : ""}</div>
       <div class="links"><a href="${esc(p.url)}" target="_blank" rel="noopener">arXiv page ↗</a><a href="${esc(p.url.replace("/abs/", "/pdf/"))}" target="_blank" rel="noopener">PDF ↗</a></div>
@@ -274,12 +283,16 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"})
   });
   $("bench").addEventListener("click", e => {
     const c = e.target.closest(".chip");
-    if (c) { state.bench = state.bench === c.dataset.bench ? null : c.dataset.bench; render(); }
+    if (!c) return;
+    if (c.id === "fresh") state.fresh = !state.fresh;
+    else state.bench = state.bench === c.dataset.bench ? null : c.dataset.bench;
+    render();
   });
   $("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { legend(); state.sel ? show(state.sel) : overview(); });
   legend();
   overview();
+  net.fit();
 }).catch(err => {
   $("info").innerHTML = `<p class="eyebrow">Could not show the graph</p><p>The site may be in the middle of an update. Reload this page in a minute.</p><p class="meta mono">${esc(err.message)}</p>`;
 });
