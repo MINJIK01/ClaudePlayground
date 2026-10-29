@@ -1,4 +1,4 @@
-"""arXiv 신규 논문 수집 → papers/YYYY-MM-DD.md 생성. 사용법: python tracker.py [lookback_days]"""
+"""arXiv 신규 논문 수집 → papers/YYYY-MM-DD.md, docs/papers.json(누적) 갱신. 사용법: python tracker.py [lookback_days]"""
 import json, sys, datetime as dt, pathlib, urllib.parse, urllib.request
 import xml.etree.ElementTree as ET
 
@@ -43,8 +43,9 @@ def to_md(p, cfg):
 def main():
     cfg = json.loads((ROOT / "config.json").read_text())
     days = int(sys.argv[1]) if len(sys.argv) > 1 else cfg["lookback_days"]
-    seen_path = ROOT / "seen.json"
-    seen = set(json.loads(seen_path.read_text())) if seen_path.exists() else set()
+    db_path = ROOT / "docs" / "papers.json"
+    db = json.loads(db_path.read_text()) if db_path.exists() else []
+    seen = {p["id"] for p in db}
 
     params = {"search_query": build_query(cfg), "sortBy": "submittedDate",
               "sortOrder": "descending", "max_results": cfg["max_results"]}
@@ -63,7 +64,9 @@ def main():
     head = "" if out.exists() else f"# {dt.date.today()}\n\n"
     with out.open("a") as f:
         f.write(head + "\n".join(to_md(p, cfg) for p in new))
-    seen_path.write_text(json.dumps(sorted(seen | {p["id"] for p in new}), indent=0))
+    for p in new:
+        p["matched"] = matched(p, cfg)
+    db_path.write_text(json.dumps(db + new, ensure_ascii=False, indent=0))
 
 
 if __name__ == "__main__":

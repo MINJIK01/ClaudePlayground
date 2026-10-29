@@ -9,5 +9,6 @@
     ["memory-augmented"]
   ],
   "lookback_days": 3,
-  "max_results": 200
+  "max_results": 200,
+  "graph_top_k": 5
 }

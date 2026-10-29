@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Graph</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+  :root { --bg:#fafafa; --fg:#1d1d1f; --muted:#6e6e73; --panel:#fff; --line:#e3e3e8; --edge:#b8b8c0; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141416; --fg:#ececf0; --muted:#9a9aa3; --panel:#1d1d21; --line:#2e2e34; --edge:#55555e; } }
+  * { box-sizing: border-box; }
+  body { margin:0; height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--fg); font:14px/1.5 system-ui, sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:16px; margin:0; }
+  header label { display:flex; gap:6px; align-items:center; color:var(--muted); }
+  input[type=search] { padding:4px 8px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--fg); }
+  #legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--muted); }
+  #legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; }
+  main { flex:1; display:flex; min-height:0; }
+  #net { flex:1; min-width:0; }
+  aside { width:380px; max-width:45vw; overflow:auto; padding:16px; border-left:1px solid var(--line); background:var(--panel); }
+  aside h2 { font-size:15px; margin:0 0 6px; }
+  aside a { color:inherit; }
+  .meta { color:var(--muted); font-size:12px; margin-bottom:10px; }
+  .rel { display:block; width:100%; text-align:left; padding:6px 0; border:0; border-top:1px solid var(--line); background:none; color:var(--fg); font:inherit; cursor:pointer; }
+  .rel span { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:8px; }
+  @media (max-width:700px) { main { flex-direction:column; } #net { flex:none; height:55vh; } aside { flex:1; width:auto; max-width:none; border-left:0; border-top:1px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Paper Graph</h1>
+  <span id="stats" class="meta" style="margin:0"></span>
+  <label>논문당 연결 수 <input id="k" type="range" min="1" max="5" value="2"><b id="kv">2</b></label>
+  <input id="q" type="search" placeholder="제목 검색">
+  <div id="legend"></div>
+</header>
+<main>
+  <div id="net"></div>
+  <aside id="info"><p class="meta">노드를 클릭하면 논문 정보와 유사 논문 목록이 표시됩니다. 연결은 제목+abstract TF-IDF 코사인 유사도 기준입니다.</p></aside>
+</main>
+<script>
+const COLORS = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#9c755f"];
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))).then(([papers, graph]) => {
+  const byId = Object.fromEntries(papers.map(p => [p.id, p]));
+  const kws = [...new Set(papers.map(p => p.matched[0]))];
+  const color = p => COLORS[kws.indexOf(p.matched[0]) % COLORS.length];
+  $("legend").innerHTML = kws.map(k => `<span><i style="background:${color({matched: [k]})}"></i>${esc(k)}</span>`).join("");
+
+  const nodes = new vis.DataSet(), links = new vis.DataSet();
+  const fg = getComputedStyle(document.body).color, edgeColor = getComputedStyle(document.documentElement).getPropertyValue("--edge");
+  const net = new vis.Network($("net"), {nodes, edges: links}, {
+    nodes: {shape: "dot", font: {color: fg, size: 11}},
+    edges: {color: {color: edgeColor, highlight: "#e15759"}, smooth: false, scaling: {min: 1, max: 4}},
+    physics: {solver: "forceAtlas2Based", stabilization: {iterations: 200}},
+    interaction: {hover: true},
+  });
+
+  let active = [];
+  function render() {
+    const k = +$("k").value, q = $("q").value.trim().toLowerCase(), uniq = {};
+    $("kv").textContent = k;
+    for (const [a, nb] of Object.entries(graph))
+      for (const [b, s] of nb.slice(0, k)) uniq[[a, b].sort()] = [a, b, s];
+    active = Object.values(uniq);
+    const deg = {};
+    active.forEach(([a, b]) => { deg[a] = (deg[a] || 0) + 1; deg[b] = (deg[b] || 0) + 1; });
+    nodes.clear(); links.clear();
+    nodes.add(papers.map(p => ({
+      id: p.id, value: 1 + (deg[p.id] || 0), title: p.title,
+      label: p.title.length > 28 ? p.title.slice(0, 28) + "…" : p.title,
+      color: color(p), opacity: !q || p.title.toLowerCase().includes(q) ? 1 : 0.15,
+    })));
+    links.add(active.map(([a, b, s]) => ({from: a, to: b, value: s, title: s.toFixed(2)})));
+    $("stats").textContent = `논문 ${papers.length} · 연결 ${active.length}`;
+  }
+
+  function show(id) {
+    const p = byId[id];
+    const rel = graph[id];
+    $("info").innerHTML = `<h2><a href="${p.url}" target="_blank">${esc(p.title)}</a></h2>
+      <div class="meta">${esc(p.authors.slice(0, 5).join(", "))}${p.authors.length > 5 ? " et al." : ""}<br>
+      ${p.published} · ${p.primary} · ${esc(p.matched.join(", "))}</div>
+      <p>${esc(p.abstract)}</p><h2>유사 논문 Top ${rel.length}</h2>` +
+      rel.map(([r, s]) => `<button class="rel" data-id="${r}"><span>${s.toFixed(2)}</span>${esc(byId[r].title)}</button>`).join("");
+    net.selectNodes([id]); net.focus(id, {scale: 1.2, animation: true});
+  }
+
+  net.on("click", e => e.nodes.length && show(e.nodes[0]));
+  $("info").addEventListener("click", e => { const b = e.target.closest(".rel"); if (b) show(b.dataset.id); });
+  ["k", "q"].forEach(id => $(id).addEventListener("input", render));
+  render();
+});
+</script>
+</body>
+</html>
