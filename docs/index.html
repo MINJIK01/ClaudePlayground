@@ -1,98 +1,199 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Paper Graph</title>
+<title>Memory Paper Graph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/standalone/umd/vis-network.min.js"></script>
 <style>
-  :root { --bg:#fafafa; --fg:#1d1d1f; --muted:#6e6e73; --panel:#fff; --line:#e3e3e8; --edge:#b8b8c0; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#141416; --fg:#ececf0; --muted:#9a9aa3; --panel:#1d1d21; --line:#2e2e34; --edge:#55555e; } }
+  /* Layout: toolbar on top, graph canvas left, reading panel right (stacks below on phones). */
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --fg: #17202c; --muted: #5d6878; --line: #dfe3ea;
+    --edge: #c3c9d3; --accent: #2f5bd3; --accent-soft: #e6ecfb;
+    --k1: #2f5bd3; --k2: #d9822b; --k3: #2e9a6a; --k4: #c8455a; --k5: #8a5cc2; --k6: #1f9bab;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #0f141b; --panel: #151b24; --fg: #e3e8ef; --muted: #8c97a7; --line: #262f3b;
+    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840;
+    --k1: #7a9bff; --k2: #f0a35a; --k3: #5cc795; --k4: #f07a8c; --k5: #b48ef0; --k6: #52c6d4; color-scheme: dark;
+  } }
+  :root[data-theme="dark"] {
+    --bg: #0f141b; --panel: #151b24; --fg: #e3e8ef; --muted: #8c97a7; --line: #262f3b;
+    --edge: #3a4553; --accent: #7a9bff; --accent-soft: #1d2840;
+    --k1: #7a9bff; --k2: #f0a35a; --k3: #5cc795; --k4: #f07a8c; --k5: #b48ef0; --k6: #52c6d4; color-scheme: dark;
+  }
   * { box-sizing: border-box; }
-  body { margin:0; height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--fg); font:14px/1.5 system-ui, sans-serif; }
-  header { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); }
-  header h1 { font-size:16px; margin:0; }
-  header label { display:flex; gap:6px; align-items:center; color:var(--muted); }
-  input[type=search] { padding:4px 8px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--fg); }
-  #legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12px; color:var(--muted); }
-  #legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; }
-  main { flex:1; display:flex; min-height:0; }
-  #net { flex:1; min-width:0; }
-  aside { width:380px; max-width:45vw; overflow:auto; padding:16px; border-left:1px solid var(--line); background:var(--panel); }
-  aside h2 { font-size:15px; margin:0 0 6px; }
-  aside a { color:inherit; }
-  .meta { color:var(--muted); font-size:12px; margin-bottom:10px; }
-  .rel { display:block; width:100%; text-align:left; padding:6px 0; border:0; border-top:1px solid var(--line); background:none; color:var(--fg); font:inherit; cursor:pointer; }
-  .rel span { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:8px; }
-  @media (max-width:700px) { main { flex-direction:column; } #net { flex:none; height:55vh; } aside { flex:1; width:auto; max-width:none; border-left:0; border-top:1px solid var(--line); } }
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); font: 14px/1.55 var(--sans); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; padding-block: 12px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    background: var(--panel); border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin-right: auto; }
+  h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  #stats { color: var(--muted); font-size: 12px; }
+  .ctrl { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { width: 30px; height: 28px; border: 0; border-left: 1px solid var(--line); background: var(--panel); color: var(--fg); font: 500 12px var(--mono); cursor: pointer; }
+  .seg button:first-child { border-left: 0; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+  #q { width: 220px; max-width: 100%; height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); font: inherit; }
+
+  #legend { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--fg); font: 12px var(--sans); cursor: pointer; }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; }
+  .chip span { color: var(--muted); font-family: var(--mono); }
+  .chip[aria-pressed="false"] { opacity: 0.4; }
+
+  main { flex: 1; display: flex; min-height: 0; }
+  #net { flex: 1; min-width: 0; }
+  aside { width: 400px; max-width: 45vw; overflow: auto; padding: 20px; background: var(--panel); border-left: 1px solid var(--line); }
+  .eyebrow { margin: 0 0 6px; color: var(--muted); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+  aside h2 { margin: 0 0 8px; font-size: 17px; line-height: 1.35; font-weight: 600; text-wrap: balance; }
+  aside h3 { margin: 20px 0 8px; font-size: 13px; font-weight: 600; }
+  aside p { margin: 0 0 10px; max-width: 65ch; }
+  .meta { color: var(--muted); font-size: 12px; }
+  .kws { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+  .kw { padding: 1px 8px; border-radius: 4px; background: var(--accent-soft); font-size: 12px; }
+  .links { display: flex; gap: 16px; margin: 12px 0 4px; font-size: 13px; font-weight: 500; }
+  .abstract { font-size: 13px; }
+  .rel { display: grid; grid-template-columns: 44px 1fr; gap: 4px 10px; width: 100%; padding: 8px 0; border: 0; border-top: 1px solid var(--line); background: none; color: var(--fg); font: 13px/1.4 var(--sans); text-align: left; cursor: pointer; }
+  .rel:hover .t { color: var(--accent); }
+  .rel .s { color: var(--muted); font: 12px var(--mono); }
+  .rel .bar { grid-column: 2; height: 3px; border-radius: 2px; background: var(--line); }
+  .rel .bar b { display: block; height: 100%; border-radius: 2px; background: var(--accent); }
+  ol.how { margin: 0 0 10px; padding-left: 18px; }
+  ol.how li { margin-bottom: 6px; }
+
+  @media (max-width: 760px) {
+    main { flex-direction: column; }
+    #net { flex: none; height: 55vh; }
+    aside { flex: 1; width: auto; max-width: none; border-left: 0; border-top: 1px solid var(--line); }
+    #q { width: 100%; }
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>Paper Graph</h1>
-  <span id="stats" class="meta" style="margin:0"></span>
-  <label>논문당 연결 수 <input id="k" type="range" min="1" max="5" value="2"><b id="kv">2</b></label>
-  <input id="q" type="search" placeholder="제목 검색">
-  <div id="legend"></div>
+  <div class="brand"><h1>Memory Paper Graph</h1><span id="stats" class="mono"></span></div>
+  <div class="ctrl">Links per paper <div class="seg" id="k" role="group" aria-label="Links per paper"></div></div>
+  <input id="q" type="search" placeholder="Search titles" aria-label="Search titles">
+  <div id="legend" aria-label="Filter by keyword"></div>
 </header>
 <main>
-  <div id="net"></div>
-  <aside id="info"><p class="meta">노드를 클릭하면 논문 정보와 유사 논문 목록이 표시됩니다. 연결은 제목+abstract TF-IDF 코사인 유사도 기준입니다.</p></aside>
+  <div id="net" aria-label="Paper similarity graph"></div>
+  <aside id="info">
+    <p class="eyebrow">About this graph</p>
+    <h2>Recent arXiv papers on persona and memory, linked by textual similarity</h2>
+    <p>Papers are collected every weekday from cs.CL, cs.LG and cs.AI when their title or abstract contains a tracked keyword. Each paper is linked to the papers whose title and abstract are most similar to it (TF-IDF cosine similarity).</p>
+    <ol class="how">
+      <li>Select a paper to read its abstract and see its closest papers.</li>
+      <li>Change <b>Links per paper</b> to show more or fewer connections.</li>
+      <li>Select a keyword chip to show or hide that group.</li>
+    </ol>
+    <p class="meta">Similarity reflects shared vocabulary, so two papers that describe the same idea in different words may not be linked.</p>
+  </aside>
 </main>
 <script>
-const COLORS = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#edc948", "#9c755f"];
 const $ = id => document.getElementById(id);
-const esc = s => s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const tex = s => s.replace(/\\(?:textbf|textit|emph|texttt|textsc)\{([^}]*)\}/g, "$1").replace(/\\([%&_#$])/g, "$1");
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))).then(([papers, graph]) => {
   const byId = Object.fromEntries(papers.map(p => [p.id, p]));
   const kws = [...new Set(papers.map(p => p.matched[0]))];
-  const color = p => COLORS[kws.indexOf(p.matched[0]) % COLORS.length];
-  $("legend").innerHTML = kws.map(k => `<span><i style="background:${color({matched: [k]})}"></i>${esc(k)}</span>`).join("");
+  const kwColor = k => css(`--k${kws.indexOf(k) % 6 + 1}`);
+  const state = {k: 2, q: "", off: new Set(), sel: null};
+  const latest = papers.reduce((m, p) => p.published > m ? p.published : m, "");
+
+  $("k").innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" data-k="${n}">${n}</button>`).join("");
+  $("legend").innerHTML = kws.map(k => `<button type="button" class="chip" data-kw="${esc(k)}"><i></i>${esc(k)}<span>${papers.filter(p => p.matched[0] === k).length}</span></button>`).join("");
 
   const nodes = new vis.DataSet(), links = new vis.DataSet();
-  const fg = getComputedStyle(document.body).color, edgeColor = getComputedStyle(document.documentElement).getPropertyValue("--edge");
   const net = new vis.Network($("net"), {nodes, edges: links}, {
-    nodes: {shape: "dot", font: {color: fg, size: 11}},
-    edges: {color: {color: edgeColor, highlight: "#e15759"}, smooth: false, scaling: {min: 1, max: 4}},
-    physics: {solver: "forceAtlas2Based", stabilization: {iterations: 200}},
-    interaction: {hover: true},
+    nodes: {shape: "dot", borderWidth: 0, font: {face: "IBM Plex Sans", size: 11}, scaling: {min: 6, max: 22}},
+    edges: {smooth: false, scaling: {min: 1, max: 4}},
+    physics: {solver: "forceAtlas2Based", forceAtlas2Based: {gravitationalConstant: -60}, stabilization: {iterations: 250}},
+    interaction: {hover: true, tooltipDelay: 150},
   });
 
-  let active = [];
   function render() {
-    const k = +$("k").value, q = $("q").value.trim().toLowerCase(), uniq = {};
-    $("kv").textContent = k;
+    const uniq = {}, deg = {}, near = new Set(state.sel ? [state.sel] : []);
     for (const [a, nb] of Object.entries(graph))
-      for (const [b, s] of nb.slice(0, k)) uniq[[a, b].sort()] = [a, b, s];
-    active = Object.values(uniq);
-    const deg = {};
-    active.forEach(([a, b]) => { deg[a] = (deg[a] || 0) + 1; deg[b] = (deg[b] || 0) + 1; });
-    nodes.clear(); links.clear();
-    nodes.add(papers.map(p => ({
+      for (const [b, s] of nb.slice(0, state.k)) uniq[[a, b].sort()] = [a, b, s];
+    const active = Object.values(uniq);
+    active.forEach(([a, b]) => {
+      deg[a] = (deg[a] || 0) + 1; deg[b] = (deg[b] || 0) + 1;
+      if (a === state.sel) near.add(b);
+      if (b === state.sel) near.add(a);
+    });
+    const lit = p => !state.off.has(p.matched[0]) && (!state.q || p.title.toLowerCase().includes(state.q)) && (!state.sel || near.has(p.id));
+    const fg = css("--fg"), muted = css("--muted"), accent = css("--accent"), edge = css("--edge");
+    nodes.update(papers.map(p => ({
       id: p.id, value: 1 + (deg[p.id] || 0), title: p.title,
-      label: p.title.length > 28 ? p.title.slice(0, 28) + "…" : p.title,
-      color: color(p), opacity: !q || p.title.toLowerCase().includes(q) ? 1 : 0.15,
+      label: p.title.length > 30 ? p.title.slice(0, 30) + "…" : p.title,
+      color: {background: kwColor(p.matched[0]), highlight: {background: accent, border: accent}},
+      font: {color: p.id === state.sel ? fg : muted}, opacity: lit(p) ? 1 : 0.12,
     })));
-    links.add(active.map(([a, b, s]) => ({from: a, to: b, value: s, title: s.toFixed(2)})));
-    $("stats").textContent = `논문 ${papers.length} · 연결 ${active.length}`;
+    links.clear();
+    links.add(active.map(([a, b, s]) => ({
+      from: a, to: b, value: s, title: `similarity ${s.toFixed(2)}`,
+      color: {color: state.sel && (a === state.sel || b === state.sel) ? accent : edge, highlight: accent,
+              opacity: lit(byId[a]) && lit(byId[b]) ? 1 : 0.15},
+    })));
+    $("stats").textContent = `${papers.length} papers · ${active.length} links · latest ${latest}`;
+    document.querySelectorAll("#k button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.k === state.k));
+    document.querySelectorAll(".chip").forEach(c => {
+      c.setAttribute("aria-pressed", !state.off.has(c.dataset.kw));
+      c.querySelector("i").style.background = kwColor(c.dataset.kw);
+    });
   }
 
   function show(id) {
-    const p = byId[id];
-    const rel = graph[id];
-    $("info").innerHTML = `<h2><a href="${p.url}" target="_blank">${esc(p.title)}</a></h2>
-      <div class="meta">${esc(p.authors.slice(0, 5).join(", "))}${p.authors.length > 5 ? " et al." : ""}<br>
-      ${p.published} · ${p.primary} · ${esc(p.matched.join(", "))}</div>
-      <p>${esc(p.abstract)}</p><h2>유사 논문 Top ${rel.length}</h2>` +
-      rel.map(([r, s]) => `<button class="rel" data-id="${r}"><span>${s.toFixed(2)}</span>${esc(byId[r].title)}</button>`).join("");
-    net.selectNodes([id]); net.focus(id, {scale: 1.2, animation: true});
+    const p = byId[id], rel = graph[id], top = rel.length ? rel[0][1] : 1;
+    state.sel = id;
+    $("info").innerHTML = `
+      <p class="eyebrow mono">arXiv ${esc(p.id)} · ${esc(p.primary)} · ${esc(p.published)}</p>
+      <h2>${esc(p.title)}</h2>
+      <div class="meta">${esc(p.authors.slice(0, 6).join(", "))}${p.authors.length > 6 ? " et al." : ""}</div>
+      <div class="links"><a href="${esc(p.url)}" target="_blank" rel="noopener">arXiv page ↗</a><a href="${esc(p.url.replace("/abs/", "/pdf/"))}" target="_blank" rel="noopener">PDF ↗</a></div>
+      <div class="kws">${p.matched.map(k => `<span class="kw">${esc(k)}</span>`).join("")}</div>
+      <p class="abstract">${esc(tex(p.abstract))}</p>
+      <h3>Most similar papers</h3>` +
+      rel.map(([r, s]) => `<button type="button" class="rel" data-id="${r}"><span class="s">${s.toFixed(2)}</span><span class="t">${esc(byId[r].title)}</span><span class="bar"><b style="width:${(100 * s / top).toFixed(0)}%"></b></span></button>`).join("");
+    $("info").scrollTop = 0;
+    render();
+    net.selectNodes([id]);
+    net.focus(id, {scale: 1.1, animation: {duration: 400}});
   }
 
-  net.on("click", e => e.nodes.length && show(e.nodes[0]));
+  net.on("click", e => {
+    if (e.nodes.length) show(e.nodes[0]);
+    else if (state.sel) { state.sel = null; render(); }
+  });
   $("info").addEventListener("click", e => { const b = e.target.closest(".rel"); if (b) show(b.dataset.id); });
-  ["k", "q"].forEach(id => $(id).addEventListener("input", render));
+  $("k").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { state.k = +b.dataset.k; render(); } });
+  $("legend").addEventListener("click", e => {
+    const c = e.target.closest(".chip");
+    if (!c) return;
+    state.off.has(c.dataset.kw) ? state.off.delete(c.dataset.kw) : state.off.add(c.dataset.kw);
+    render();
+  });
+  $("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
   render();
+}).catch(() => {
+  $("info").innerHTML = '<p class="eyebrow">Data unavailable</p><p>The paper data could not be loaded. Run the tracker workflow once so that docs/papers.json and docs/graph.json exist, then reload this page.</p>';
 });
 </script>
 </body>
