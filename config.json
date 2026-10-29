@@ -3,8 +3,7 @@
   "keywords": [
     ["persona", "memory"],
     ["persona", "consistency"],
-    ["memory", "language model"],
-    ["memory", "agent"]
+    ["memory", "language model"]
   ],
   "lookback_days": 3,
   "max_results": 200
