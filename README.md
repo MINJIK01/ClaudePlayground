@@ -3,7 +3,7 @@
 `config.json`의 카테고리·키워드로 arXiv 신규 논문을 평일마다 자동 수집해 `papers/YYYY-MM-DD.md`로 커밋합니다. 외부 의존성과 API 키는 필요 없습니다.
 Collects new arXiv papers matching the categories and keywords in `config.json` every weekday and commits them to `papers/YYYY-MM-DD.md`. No external dependencies or API keys are required.
 
-**Paper graph / 논문 그래프:** https://minjik01.github.io/ClaudePlayground/
+**Paper graph / 논문 그래프:** https://minjik01.github.io/Memory-paper-Memory/
 
 ## 설정 / Configuration (`config.json`)
 | Key | 설명 | Description |
