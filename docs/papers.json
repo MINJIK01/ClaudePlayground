@@ -971,54 +971,6 @@
 "added": "2026-10-29"
 },
 {
-"id": "2610.36484",
-"url": "http://arxiv.org/abs/2610.36484v1",
-"title": "CogArena: Benchmarking Multimodal Agents on Interactive Behavioral Experiments",
-"abstract": "Claims about the cognitive capabilities of large language models are typically tested by translating behavioral paradigms into text prompts, bypassing the visual interfaces and time pressure through which human participants actually engage with experiments. At the same time, AI agents can now complete online behavioral tasks and produce human-like data, which raises concerns that online datasets in the social and behavioral sciences are increasingly open to contamination. We introduce CogArena, a benchmark of ten experimental paradigms from the social and behavioral sciences. Agents complete the experiments through a standard web browser, working with the same visual stimuli and response interfaces that online participants use. A three-level scoring procedure evaluates whether the agent completed the task, how accurately it performed, and whether its data show the behavioral signatures each paradigm reliably produces in people. Across four multimodal models, each run ten times per task, we find that finishing an experiment and reproducing its signatures are different things. Many sessions did not finish, and those that did reproduced some signatures reliably and others not at all. CogArena provides the tasks, scoring code, and a public leaderboard for new submissions.",
-"published": "2026-10-27",
-"authors": [
-"Kianté Fernandez",
-"Caitlin Chen",
-"Jialu Zhou",
-"Bartek Sadowski",
-"Anthony C. Miceli",
-"Ian Krajbich"
-],
-"cats": [
-"cs.AI",
-"cs.CY",
-"cs.HC",
-"q-bio.NC"
-],
-"primary": "cs.AI",
-"relevance": 0.875,
-"matched": [],
-"added": "2026-10-29"
-},
-{
-"id": "2610.34991",
-"url": "http://arxiv.org/abs/2610.34991v2",
-"title": "Diagnosing and Mitigating Long-Session Degradation in Full-Duplex Speech Models",
-"abstract": "End-to-end full-duplex spoken dialogue models enable natural, real-time spoken interactions with interruptions, backchannels, and overlapping speech. Prior evaluations have assessed diverse interaction capabilities and identified some degradation patterns across conversational turns. However, how model behavior evolves over extended sessions remains insufficiently understood. In this work, we address this gap by systematically characterizing long-session degradation and developing efficient methods to mitigate it. We introduce a closed-loop evaluation framework for long-session stability and apply it to several publicly available full-duplex speech models, revealing degradation over time in responsiveness, spoken content quality, and voice consistency. To mitigate this degradation, we propose a self-distillation-based training framework for lightweight LoRA adaptation that improves long-session stability with a small amount of additional training. We further introduce a two-resolution context (TRC) architecture that preserves recent interactions in full detail while compressing older interaction history into key-value representations. We evaluate our methods on three models with distinct architectures, assessing long-session stability, information retention, and computational efficiency. Across all three models, we show that LoRA adaptation mitigates performance degradation over ten-minute sessions, while adding TRC extends these gains beyond the training session length and reduces KV-cache growth by more than 90%.",
-"published": "2026-10-26",
-"authors": [
-"Junho Kim",
-"CheHyun Lee",
-"Donghun Kang",
-"Youngho Cho",
-"Dongwook Lee",
-"Heeseung Kim",
-"Sungroh Yoon"
-],
-"cats": [
-"cs.CL"
-],
-"primary": "cs.CL",
-"relevance": 0.871,
-"matched": [],
-"added": "2026-10-29"
-},
-{
 "id": "2610.34977",
 "url": "http://arxiv.org/abs/2610.34977v1",
 "title": "Adaptive Memory Index Evolution for Agents",
@@ -1063,6 +1015,56 @@
 "matched": [
 "persona + memory"
 ],
+"added": "2026-10-29"
+},
+{
+"id": "2610.36967",
+"url": "http://arxiv.org/abs/2610.36967v1",
+"title": "Proactive Memory for Event-Driven LLM Agents",
+"abstract": "Proactive LLM agents anticipate service opportunities from ongoing observations and accumulated history. Existing approaches emphasize recent context or retrieval of related memories, providing limited support for validating recurring behavioral regularities and assessing their applicability to the current event. We propose Proactive Memory (ProactMem), which organizes history into recent events, temporal trajectories, and behavioral regularities. Trajectory facts are checked against source events, and regularities are assessed through historical replay before being matched to current conditions. We also construct ProactiveStream, a longitudinal benchmark covering three application scopes, where agents process isolated event streams chronologically under episode-aware opportunity labels. On ProactiveStream, ProactMem achieves an overall effectiveness (F1) of 52.6%, a 21.4% relative improvement over the strongest of five external baselines. Code is available at: https://anonymous.4open.science/r/ProactMem-5351/.",
+"published": "2026-10-27",
+"authors": [
+"Jinyang Li",
+"Zichuan Fu",
+"Xian Wu",
+"Wenlin Zhang",
+"Yimin Deng",
+"Kaifeng Guo",
+"Guojing Li",
+"Junjia QI",
+"Xiangyu Zhao"
+],
+"cats": [
+"cs.AI"
+],
+"primary": "cs.AI",
+"relevance": 0.857,
+"matched": [],
+"added": "2026-10-29"
+},
+{
+"id": "2610.36794",
+"url": "http://arxiv.org/abs/2610.36794v1",
+"title": "Select-TTT: Query-Conditioned Selective Fast Weight Updates for In-Place Test-Time Training",
+"abstract": "Test-time training (TTT) enables a deployed language model to internalize incoming context on-the-fly into a small set of fast-weight parameters, rather than merely treating it as transient context for attention. In-Place TTT recently made this idea practical for large language models by repurposing the down-projection of standard MLP blocks as fast weights. However, we find that its benefit largely disappears on realistic web long-context question answering. We attribute this to In-Place TTT's uniform write schedule: every chunk is written with equal strength, so irrelevant content dilutes query-relevant information in fast-weight memory. Building on this insight, we propose Select-TTT, a model-agnostic, query-conditioned rule for In-Place TTT that scales each chunk's write strength by its relevance to the user query. This relevance signal requires no supervision and no new parameters: it is read directly from the model's frozen output head, as the probability mass that a chunk's hidden states assign to the query tokens. A temperature-scaled softmax turns these scores into learning-rate multipliers, leaving the chunk-wise, context-parallel computation of In-Place TTT intact. Select-TTT consistently improves long-context question answering on two benchmarks and two backbones. These findings highlight the value of query-conditioned fast weight writes for practical test-time training on long-context question answering, which is also potentially promising for long-horizon agent tasks involving multiple user queries over evolving contexts.",
+"published": "2026-10-27",
+"authors": [
+"Yue Wu",
+"Yang Zhang",
+"Weinan Gan",
+"Chongming Gao",
+"Xinsen Guo",
+"Xiaoyuan Li",
+"Fuli Feng"
+],
+"cats": [
+"cs.LG",
+"cs.AI",
+"cs.CL"
+],
+"primary": "cs.LG",
+"relevance": 0.853,
+"matched": [],
 "added": "2026-10-29"
 }
 ]
