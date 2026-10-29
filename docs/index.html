@@ -123,7 +123,7 @@ const tex = s => s.replace(/\\(?:textbf|textit|emph|texttt|textsc)\{([^}]*)\}/g,
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const monday = d => { const t = new Date(d + "T00:00:00Z"); t.setUTCDate(t.getUTCDate() - (t.getUTCDay() + 6) % 7); return t.toISOString().slice(0, 10); };
 
-Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))).then(([papers, G]) => {
+Promise.all(["papers.json", "graph.json"].map(f => fetch(f, {cache: "no-cache"}).then(r => r.json()))).then(([papers, G]) => {
   const byId = Object.fromEntries(papers.map(p => [p.id, p]));
   const tracked = papers.filter(p => !p.anchor);
   const kws = [...new Set(tracked.map(p => p.matched[0]))];
@@ -280,8 +280,8 @@ Promise.all(["papers.json", "graph.json"].map(f => fetch(f).then(r => r.json()))
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { legend(); state.sel ? show(state.sel) : overview(); });
   legend();
   overview();
-}).catch(() => {
-  $("info").innerHTML = '<p class="eyebrow">Data unavailable</p><p>The paper data could not be loaded. Run the tracker workflow once so that docs/papers.json and docs/graph.json exist, then reload this page.</p>';
+}).catch(err => {
+  $("info").innerHTML = `<p class="eyebrow">Could not show the graph</p><p>The site may be in the middle of an update. Reload this page in a minute.</p><p class="meta mono">${esc(err.message)}</p>`;
 });
 </script>
 </body>
